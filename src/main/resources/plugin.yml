@@ -1,0 +1,18 @@
+main: com.github.vaporrrr.bteenhanced.Main
+name: BTEEnhanced
+version: 1.0-SNAPSHOT
+author: VapoR
+depend: [WorldEdit]
+commands:
+  wood:
+    description: Creates a forest/wood in your selection from schematics
+    usage: /wood <schematic(s)> <blockID> <-ua>
+    permission: bteenhanced.wood
+  wood-undo:
+    description: Undo the /wood command
+    usage: /wood-undo
+    permission: bteenhanced.wood
+  wood-redo:
+    description: Redo the /wood command
+    usage: /wood-redo
+    permission: bteenhanced.wood
