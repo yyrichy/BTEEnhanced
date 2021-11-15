@@ -2,7 +2,6 @@ package com.github.vaporrrr.bteenhanced.wood;
 
 import com.github.vaporrrr.bteenhanced.Main;
 import com.sk89q.worldedit.*;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
@@ -15,10 +14,10 @@ import com.sk89q.worldedit.session.SessionManager;
 import com.sk89q.worldedit.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Wood {
     private final Player p;
@@ -85,24 +84,54 @@ public class Wood {
             return;
         }
 
-        for (BlockVector point : region){
-            //Only surface blocks
-            if(editSession.getBlock(new Vector(point.getX(), point.getY() + 1, point.getZ())).isAir()){
-                BaseBlock block = editSession.getBlock(point);
-                boolean blockIsTarget = (block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock));
-                if (blockIsTarget) {
-                    Vector pos = new Vector(point.getX(), point.getY() + 1, point.getZ());
-                    PasteBuilder pb = cliph.createPaste(editSession, editSession.getWorld().getWorldData()).to(pos)
-                            .ignoreAirBlocks(ignoreAirBlocks);
-                    try {
-                        Operations.completeLegacy(pb.build());
-                    } catch (MaxChangedBlocksException e){
-                        p.printError("Max changed blocks.");
-                        return;
-                    }
-                }
+        int trees = 0;
+        ArrayList<BlockVector> points = randomPoints(20, 15, region, editSession);
+        for (BlockVector point : points){
+            Vector pos = new Vector(point.getX(), point.getY() + 1, point.getZ());
+            PasteBuilder pb = cliph.createPaste(editSession, editSession.getWorld().getWorldData()).to(pos)
+                    .ignoreAirBlocks(ignoreAirBlocks);
+            try {
+                Operations.completeLegacy(pb.build());
+                trees++;
+            } catch (MaxChangedBlocksException e){
+                p.printError("Max changed blocks.");
+                return;
             }
         }
-        p.print("Done!");
+        p.print("Done! " + trees + " trees pasted.");
+    }
+
+    private static ArrayList<BlockVector> randomPoints(int density, int distanceCheck, Region region, EditSession editSession) {
+        ArrayList<BlockVector> result = new ArrayList<>();
+        ArrayList<BlockVector> points = new ArrayList<>();
+        for (BlockVector point : region) {
+            if(!editSession.getBlock(point).isAir() && editSession.getBlock(new Vector(point.getX(), point.getY() + 1, point.getZ())).isAir()) {
+                points.add(point);
+            }
+        }
+        int num = points.size() / density;
+        for(int i = 0; i < num; i++){
+            BlockVector bestCandidate = null; double bestDistance = 0;
+            for(int j = 0; j < distanceCheck; j++) {
+                BlockVector randomPoint = points.get((int)(Math.random()* points.size()));
+                double x = randomPoint.getX(); double z = randomPoint.getZ();
+                double distanceToClosestPoint = (1/0.0);
+                for (BlockVector point : result) {
+                    double dx = x - point.getX(); double dz = z - point.getZ();
+                    double distance = dx * dx + dz * dz;
+                    if(distanceToClosestPoint > distance){
+                        distanceToClosestPoint = distance;
+                    }
+                }
+                if(bestDistance < distanceToClosestPoint){
+                    bestDistance = distanceToClosestPoint;
+                    bestCandidate = randomPoint;
+                }
+            }
+            if(bestCandidate != null) {
+                result.add(bestCandidate);
+            }
+        }
+        return result;
     }
 }
