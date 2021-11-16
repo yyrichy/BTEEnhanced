@@ -38,12 +38,16 @@ public class Wood implements CommandExecutor {
             p.printError("Specify the block you want trees to be placed above.");
             return false;
         }
+        if (args.length < 3) {
+            p.printError("Specify the radius (spacing of trees).");
+            return false;
+        }
         // If flags
-        if (args.length > 2) {
-            ArrayList<String> flags = new ArrayList<>(Arrays.asList(args).subList(2, args.length));
-            WoodManager.create(p, args[0], args[1], flags);
+        if (args.length > 3) {
+            ArrayList<String> flags = new ArrayList<>(Arrays.asList(args).subList(3, args.length));
+            WoodManager.create(p, args[0], args[1], args[2], flags);
         } else {
-            WoodManager.create(p, args[0], args[1]);
+            WoodManager.create(p, args[0], args[1], args[2]);
         }
         return true;
     }

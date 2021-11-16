@@ -11,13 +11,13 @@ import java.util.*;
 
 public class WoodManager {
     private static Map<UUID, Wood> woodMap = Maps.newHashMap();
-    public static void create(Player p, String schematicLoc, String targetBlock, ArrayList<String> flags) {
-        Wood wood = new Wood(p, schematicLoc, targetBlock, !flags.contains("-ua"));
+    public static void create(Player p, String schematicLoc, String targetBlock, String radius, ArrayList<String> flags) {
+        Wood wood = new Wood(p, schematicLoc, targetBlock, radius, !flags.contains("-ua"));
         woodMap.put(p.getUniqueId(), wood);
         wood.execute();
     }
-    public static void create(Player p, String schematicLoc, String targetBlock) {
-        Wood wood = new Wood(p, schematicLoc, targetBlock, true);
+    public static void create(Player p, String schematicLoc, String targetBlock, String radius) {
+        Wood wood = new Wood(p, schematicLoc, targetBlock, radius, true);
         woodMap.put(p.getUniqueId(), wood);
         wood.execute();
     }
