@@ -20,6 +20,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -76,33 +77,24 @@ public class Wood {
         File file = new File(schematicsFolder + File.separator + schematicLoc + ".schematic");
         ClipboardFormat format = ClipboardFormat.SCHEMATIC;
         ClipboardReader reader;
+        editSession = new EditSession((LocalWorld) p.getWorld(), -1);
 
         try {
             reader = format.getReader(new FileInputStream(file));
         } catch (IOException e) {
+            e.printStackTrace();
             p.printError("Schematic not found.");
             return;
         }
         try {
             clipboard = reader.read(p.getWorld().getWorldData());
-            localSession.setClipboard(new ClipboardHolder(clipboard, p.getWorld().getWorldData()));
         } catch (IOException e) {
             e.printStackTrace();
-            p.printError("Clipboard ex.");
+            p.printError("Could not read clipboard.");
             return;
         }
 
-        editSession = new EditSession((LocalWorld) p.getWorld(), -1);
-        ClipboardHolder cliph;
-
-        try {
-            cliph = localSession.getClipboard();
-        } catch (EmptyClipboardException e) {
-            e.printStackTrace();
-            p.printError("Empty Clipboard.");
-            editSession.flushQueue();
-            return;
-        }
+        ClipboardHolder cliph = new ClipboardHolder(clipboard, p.getWorld().getWorldData());
 
         surfaceGrid = new BlockVector[region.getWidth()][region.getLength()];
         Vector minimumPoint = region.getMinimumPoint();
