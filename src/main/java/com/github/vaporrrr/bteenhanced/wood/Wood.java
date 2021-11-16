@@ -13,14 +13,12 @@ import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.session.PasteBuilder;
 import com.sk89q.worldedit.session.SessionManager;
 import com.sk89q.worldedit.world.World;
-import jdk.nashorn.internal.ir.Block;
 import org.apache.commons.lang.NullArgumentException;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -35,7 +33,6 @@ public class Wood {
     private BlockVector[][] surfaceGrid;
     private BlockVector[][] grid;
     private BlockVector minPoint;
-    private static final Plugin plugin = Main.getPlugin(Main.class);
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
 
     public Wood(Player p, String schematicLoc, String targetBlock, String rad, boolean ignoreAirBlocks) {
@@ -102,7 +99,7 @@ public class Wood {
         for (BlockVector p : region) {
             if (editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir()) {
                 BaseBlock block = editSession.getBlock(p);
-                if ((block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock))){
+                if ((block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock))) {
                     int pX = Math.abs((int) (p.getX() - minPoint.getX()));
                     int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
                     BlockVector pos = surfaceGrid[pX][pZ];
@@ -135,8 +132,8 @@ public class Wood {
         float cellSize = (float) Math.floor(radius / Math.sqrt(N));
         Random generator = new Random();
 
-        int ncells_width = (int) (Math.ceil(width/cellSize) + 1);
-        int ncells_height = (int) Math.ceil(height/cellSize) + 1;
+        int ncells_width = (int) (Math.ceil(width / cellSize) + 1);
+        int ncells_height = (int) Math.ceil(height / cellSize) + 1;
 
         points.add(p0);
         active.add(p0);
