@@ -28,8 +28,10 @@ public class Wood {
     private final String schematicLoc;
     private final String targetBlock;
     private float radius;
+    private int schematicsOverMaxSize = 0;
     private final boolean ignoreAirBlocks;
     private final boolean randomRotation;
+    private boolean undone = false;
     private EditSession editSession;
     private Tree[][] surfaceGrid;
     private Tree[][] grid;
@@ -52,6 +54,14 @@ public class Wood {
         return editSession;
     }
 
+    public boolean isUndone() {
+        return undone;
+    }
+
+    public void setUndone(boolean undone) {
+        this.undone = undone;
+    }
+
     public void execute() {
         File schematicsFolder = new File(we.getDataFolder() + File.separator + "schematics");
         WorldEdit worldEdit = WorldEdit.getInstance();
@@ -67,7 +77,6 @@ public class Wood {
             return;
         }
 
-
         if (schematicLoc.charAt(schematicLoc.length() - 1) == '*') {
             File directory;
             if (schematicLoc.length() == 1) {
@@ -81,7 +90,8 @@ public class Wood {
                     return;
                 }
             }
-            if(directory.exists()) {
+            if (directory.exists()) {
+                File file = new File();
                 setSchematics(directory);
             } else {
                 p.printError("Folder path does not exist.");
@@ -149,14 +159,14 @@ public class Wood {
                 return;
             }
         }
-        p.print("Done! " + points.size() + " trees pasted.");
+        p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics used. " + (schematicsOverMaxSize == 0 ? "" : " schematics too large."));
     }
 
     private ArrayList<Tree> poissonDiskSampling(int k, Tree p0, int width, int height) {
         int N = 2;
         ArrayList<Tree> points = new ArrayList<>();
         ArrayList<Tree> active = new ArrayList<>();
-        if(Float.isNaN(radius)) radius = averageRadius();
+        if (Float.isNaN(radius)) radius = averageRadius();
         float cellSize = (float) Math.floor(radius / Math.sqrt(N));
         Random generator = new Random();
 
@@ -264,6 +274,8 @@ public class Wood {
                             reader = format.getReader(new FileInputStream(file));
                             clipboard = reader.read(p.getWorld().getWorldData());
                             schematics.add(clipboard);
+                        } else {
+                            schematicsOverMaxSize++;
                         }
                     } catch (IOException e) {
                         p.printError("Schematic " + file.getName() + " not found.");
@@ -289,6 +301,6 @@ public class Wood {
     }
 
     public float calculateRadius(Clipboard clipboard) {
-        return Math.max(clipboard.getRegion().getWidth()/2f, clipboard.getRegion().getLength()/2f) + 1;
+        return Math.max(clipboard.getRegion().getWidth() / 2f, clipboard.getRegion().getLength() / 2f) + 1;
     }
 }

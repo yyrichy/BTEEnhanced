@@ -3,7 +3,7 @@
 Created for the BuildtheEarth project to make creating custom forests easier. Uses [Bridson's algorithm](https://sighack.com/post/poisson-disk-sampling-bridsons-algorithm) for poisson disk sampling (randomly picking packed points to place trees at).
 
 Commands:
-- `/wood <schematic(s)> <blockID> <flags -useAir,-dontRotate,-r:x>`
+- `/wood <schematic(s)> <blockID> <flags -includeAir,-dontRotate,-r:x>`
 - `/wood-undo`
 - `/wood-redo`
 
@@ -17,7 +17,7 @@ Adding a * after the file separator will randomize the schematics from that fold
 < blockID > is the block you want trees to be placed above.
 
 ### Flags
-- `-useAir` is the equivalent of not adding -a when pasting. (By default ignores air blocks)
+- `-includeAir` is the equivalent of not adding -a when pasting. (By default ignores air blocks)
 - `-dontRotate` disables the random rotation (90 degree increments) of schematics.
 - `-r:x` overrides the automatically created default radius. Radius being the minimum spacing between trees. The radius by default is calculated by averaging the width or height (whichever is larger), and dividing by 2. An example of the flag being used is -r:10
 

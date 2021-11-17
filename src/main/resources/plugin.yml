@@ -6,7 +6,7 @@ depend: [WorldEdit]
 commands:
   wood:
     description: Creates a forest/wood in your selection from schematics
-    usage: /wood <schematic(s)> <blockID> <flags -useAir,-dontRotate,-r:x>
+    usage: /wood <schematic(s)> <blockID> <-includeAir,-dontRotate,-r:x>
     permission: bteenhanced.wood
   wood-undo:
     description: Undo the /wood command
