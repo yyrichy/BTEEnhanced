@@ -1,6 +1,6 @@
 package com.github.vaporrrr.bteenhanced.wood;
 
-import com.github.vaporrrr.bteenhanced.Main;
+import com.github.vaporrrr.bteenhanced.BTEEnhanced;
 import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.entity.Player;
@@ -8,12 +8,12 @@ import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.session.PasteBuilder;
 import com.sk89q.worldedit.session.SessionManager;
 import com.sk89q.worldedit.world.World;
-import org.apache.commons.lang.NullArgumentException;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -29,25 +29,22 @@ public class Wood {
     private final String targetBlock;
     private float radius;
     private final boolean ignoreAirBlocks;
+    private final boolean randomRotation;
     private EditSession editSession;
-    private BlockVector[][] surfaceGrid;
-    private BlockVector[][] grid;
+    private Tree[][] surfaceGrid;
+    private Tree[][] grid;
+    private ArrayList<Clipboard> schematics = new ArrayList<>();
     private BlockVector minPoint;
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
+    private static final Plugin plugin = BTEEnhanced.getPlugin(BTEEnhanced.class);
 
-    public Wood(Player p, String schematicLoc, String targetBlock, String rad, boolean ignoreAirBlocks) {
+    public Wood(Player p, String schematicLoc, String targetBlock, float radius, boolean ignoreAirBlocks, boolean randomRotation) {
         this.p = p;
         this.schematicLoc = schematicLoc;
         this.targetBlock = targetBlock;
+        this.radius = radius;
         this.ignoreAirBlocks = ignoreAirBlocks;
-        try {
-            this.radius = Float.parseFloat(rad);
-        } catch (NullArgumentException e) {
-            this.radius = 5;
-            p.printError("Radius must be a number, set radius to 5.");
-        }
-
-
+        this.randomRotation = randomRotation;
         this.editSession = new EditSession((LocalWorld) p.getWorld(), -1);
     }
 
@@ -70,50 +67,80 @@ public class Wood {
             return;
         }
 
-        Clipboard clipboard;
-        File file = new File(schematicsFolder + File.separator + schematicLoc + ".schematic");
-        ClipboardFormat format = ClipboardFormat.SCHEMATIC;
-        ClipboardReader reader;
-        editSession = new EditSession((LocalWorld) p.getWorld(), -1);
 
-        try {
-            reader = format.getReader(new FileInputStream(file));
-        } catch (IOException e) {
-            e.printStackTrace();
-            p.printError("Schematic not found.");
-            return;
+        if (schematicLoc.charAt(schematicLoc.length() - 1) == '*') {
+            File directory;
+            if (schematicLoc.length() == 1) {
+                directory = schematicsFolder;
+            } else {
+                String fileSeperator = schematicLoc.substring(schematicLoc.length() - 1 - File.separator.length(), schematicLoc.length() - 1);
+                if (fileSeperator.equals(File.separator) || fileSeperator.equals("/")) {
+                    directory = new File(schematicsFolder + File.separator + schematicLoc.substring(0, schematicLoc.length() - 2));
+                } else {
+                    p.printError("Could not understand the path.");
+                    return;
+                }
+            }
+            if(directory.exists()) {
+                setSchematics(directory);
+            } else {
+                p.printError("Folder path does not exist.");
+                return;
+            }
+        } else {
+            File file = new File(schematicsFolder + File.separator + schematicLoc + ".schematic");
+            Clipboard clipboard;
+            ClipboardFormat format = ClipboardFormat.SCHEMATIC;
+            ClipboardReader reader;
+            try {
+                reader = format.getReader(new FileInputStream(file));
+                clipboard = reader.read(p.getWorld().getWorldData());
+            } catch (IOException e) {
+                p.printError("Schematic " + file.getName() + " not found.");
+                return;
+            }
+            schematics.add(clipboard);
         }
-        try {
-            clipboard = reader.read(p.getWorld().getWorldData());
-        } catch (IOException e) {
-            e.printStackTrace();
-            p.printError("Could not read clipboard.");
-            return;
-        }
 
-        ClipboardHolder cliph = new ClipboardHolder(clipboard, p.getWorld().getWorldData());
-
-        surfaceGrid = new BlockVector[region.getWidth()][region.getLength()];
+        surfaceGrid = new Tree[region.getWidth()][region.getLength()];
         Vector minimumPoint = region.getMinimumPoint();
         minPoint = new BlockVector(minimumPoint.getX(), minimumPoint.getY(), minimumPoint.getZ());
+        editSession = new EditSession((LocalWorld) p.getWorld(), -1);
+        boolean startingPointSet = false;
+        BlockVector blockVector = null;
         for (BlockVector p : region) {
             if (editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir()) {
                 BaseBlock block = editSession.getBlock(p);
                 if ((block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock))) {
                     int pX = Math.abs((int) (p.getX() - minPoint.getX()));
                     int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
-                    BlockVector pos = surfaceGrid[pX][pZ];
-                    if (pos == null || pos.getY() < p.getY()) {
-                        surfaceGrid[pX][pZ] = p;
+                    Tree tree = surfaceGrid[pX][pZ];
+                    if (tree == null || tree.getY() < (int) p.getY()) {
+                        surfaceGrid[pX][pZ] = new Tree(p);
+                        if (!startingPointSet) {
+                            blockVector = surfaceGrid[pX][pZ].getBlockVector();
+                            startingPointSet = true;
+                        }
                     }
                 }
             }
         }
-        ArrayList<BlockVector> points = poissonDiskSampling(radius, 20, region.getCenter().toBlockVector(), region.getWidth(), region.getLength());
+        if (surfaceGrid == null) {
+            p.printError("No suitable surface points found. Use block ID to specify what block you want to place trees on.");
+            return;
+        }
+        ArrayList<Tree> points = poissonDiskSampling(plugin.getConfig().getInt("MaxTries"), new Tree(blockVector, getRandomSchematic()), region.getWidth(), region.getLength());
 
-        for (BlockVector point : points) {
-            Vector pos = new Vector(point.getX(), point.getY() + 1, point.getZ());
-            PasteBuilder pb = cliph.createPaste(editSession, editSession.getWorld().getWorldData()).to(pos)
+        Random rand = new Random();
+        for (Tree tree : points) {
+            Vector pos = new Vector(tree.getX(), tree.getY() + 1, tree.getZ());
+            ClipboardHolder clipboardHolder = new ClipboardHolder(tree.getClipboard(), p.getWorld().getWorldData());
+            if (randomRotation) {
+                AffineTransform transform = new AffineTransform();
+                transform.rotateY(rand.nextInt(4) * 90);
+                clipboardHolder.setTransform(transform);
+            }
+            PasteBuilder pb = clipboardHolder.createPaste(editSession, editSession.getWorld().getWorldData()).to(pos)
                     .ignoreAirBlocks(ignoreAirBlocks);
             try {
                 Operations.completeLegacy(pb.build());
@@ -125,10 +152,11 @@ public class Wood {
         p.print("Done! " + points.size() + " trees pasted.");
     }
 
-    private ArrayList<BlockVector> poissonDiskSampling(float radius, int k, BlockVector p0, int width, int height) {
+    private ArrayList<Tree> poissonDiskSampling(int k, Tree p0, int width, int height) {
         int N = 2;
-        ArrayList<BlockVector> points = new ArrayList<>();
-        ArrayList<BlockVector> active = new ArrayList<>();
+        ArrayList<Tree> points = new ArrayList<>();
+        ArrayList<Tree> active = new ArrayList<>();
+        if(Float.isNaN(radius)) radius = averageRadius();
         float cellSize = (float) Math.floor(radius / Math.sqrt(N));
         Random generator = new Random();
 
@@ -138,7 +166,7 @@ public class Wood {
         points.add(p0);
         active.add(p0);
 
-        grid = new BlockVector[ncells_width][ncells_height];
+        grid = new Tree[ncells_width][ncells_height];
         for (int i = 0; i < ncells_width; i++)
             for (int j = 0; j < ncells_height; j++)
                 grid[i][j] = null;
@@ -146,7 +174,8 @@ public class Wood {
 
         while (active.size() > 0) {
             int random_index = generator.nextInt(active.size());
-            BlockVector p = active.get(random_index);
+            BlockVector p = active.get(random_index).getBlockVector();
+            Clipboard randomClipboard = getRandomSchematic();
 
             boolean found = false;
             for (int tries = 0; tries < k; tries++) {
@@ -161,7 +190,8 @@ public class Wood {
                     continue;
                 }
 
-                BlockVector pnew = surfaceGrid[(int) pnewx][(int) pnewz];
+                Tree pnew = surfaceGrid[(int) pnewx][(int) pnewz];
+                pnew = new Tree(pnew.getBlockVector(), randomClipboard);
                 points.add(pnew);
                 insertPoint(cellSize, pnew);
                 active.add(pnew);
@@ -178,9 +208,9 @@ public class Wood {
         return points;
     }
 
-    private void insertPoint(float cellSize, BlockVector p) {
-        int pX = Math.abs((int) (p.getX() - minPoint.getX()));
-        int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
+    private void insertPoint(float cellSize, Tree p) {
+        int pX = Math.abs((int) (p.getBlockVector().getX() - minPoint.getX()));
+        int pZ = Math.abs((int) (p.getBlockVector().getZ() - minPoint.getZ()));
         int xindex = (int) Math.floor(pX / cellSize);
         int zindex = (int) Math.floor(pZ / cellSize);
         grid[xindex][zindex] = p;
@@ -212,7 +242,53 @@ public class Wood {
         return true;
     }
 
-    private double dist(double x1, double y1, double x2, double y2) {
+    private static double dist(double x1, double y1, double x2, double y2) {
         return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+    }
+
+    private Clipboard getRandomSchematic() {
+        return schematics.get(new Random().nextInt(schematics.size()));
+    }
+
+    private void setSchematics(File directory) {
+        Clipboard clipboard;
+        ClipboardFormat format = ClipboardFormat.SCHEMATIC;
+        ClipboardReader reader;
+        int maxSchemSize = plugin.getConfig().getInt("MaxSchemSize");
+        File[] fList = directory.listFiles();
+        if (fList != null) {
+            for (File file : fList) {
+                if (file.isFile() && fileIsSchematic(file)) {
+                    try {
+                        if (file.length() <= maxSchemSize) {
+                            reader = format.getReader(new FileInputStream(file));
+                            clipboard = reader.read(p.getWorld().getWorldData());
+                            schematics.add(clipboard);
+                        }
+                    } catch (IOException e) {
+                        p.printError("Schematic " + file.getName() + " not found.");
+                    }
+                } else if (file.isDirectory()) {
+                    setSchematics(file);
+                }
+            }
+        }
+    }
+
+    public static boolean fileIsSchematic(File file) {
+        int period = file.getName().lastIndexOf('.');
+        return file.getName().substring(period + 1).equals("schematic");
+    }
+
+    public float averageRadius() {
+        float sum = 0;
+        for (Clipboard clipboard : schematics) {
+            sum += calculateRadius(clipboard);
+        }
+        return sum / schematics.size();
+    }
+
+    public float calculateRadius(Clipboard clipboard) {
+        return Math.max(clipboard.getRegion().getWidth()/2f, clipboard.getRegion().getLength()/2f) + 1;
     }
 }

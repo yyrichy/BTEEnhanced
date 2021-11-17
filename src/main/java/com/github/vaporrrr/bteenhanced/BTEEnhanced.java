@@ -5,7 +5,7 @@ import com.github.vaporrrr.bteenhanced.commands.WoodRedo;
 import com.github.vaporrrr.bteenhanced.commands.WoodUndo;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class Main extends JavaPlugin {
+public class BTEEnhanced extends JavaPlugin {
     @Override public void onDisable(){}
     @Override public void onEnable(){
         getLogger().info("BTEEnhanced enabled!");

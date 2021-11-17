@@ -1,0 +1,5 @@
+# MaxSchemSize: 5100 (In bytes)
+# MaxTries: 30 (Bridons algorithm tries to find a suitable next point for a tree. The narrower/smaller the selection and larger the radius the less likely a point is found per try.
+# So too low of a value will leave holes, while too high and speed will be slower. I suggest you don't touch the number of tries.
+MaxSchemSize: 5120
+MaxTries: 30
