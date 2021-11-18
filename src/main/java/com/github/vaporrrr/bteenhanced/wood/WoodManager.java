@@ -34,13 +34,13 @@ public class WoodManager {
             }
         }
         Wood wood = new Wood(p, schematicLoc, targetBlock, radius, ignoreAir, randomRotation);
-        add(wood, p);
+        add(wood, p.getUniqueId());
         wood.execute();
     }
 
     public static void create(Player p, String schematicLoc, String targetBlock) {
         Wood wood = new Wood(p, schematicLoc, targetBlock, Float.NaN, true, true);
-        add(wood, p);
+        add(wood, p.getUniqueId());
         wood.execute();
     }
 
@@ -98,20 +98,25 @@ public class WoodManager {
         }
     }
 
-    public static void add(Wood wood, Player p) {
-        if (woodMap.containsKey(p.getUniqueId())) {
-            ArrayList<Wood> woodArrayList = woodMap.get(p.getUniqueId());
+    public static void add(Wood wood, UUID UUID) {
+        if (woodMap.containsKey(UUID)) {
+            ArrayList<Wood> woodArrayList = woodMap.get(UUID);
             if (woodArrayList.size() >= plugin.getConfig().getInt("ActionsToKeep")) {
                 woodArrayList.remove(0);
             }
             woodArrayList.add(wood);
+        } else {
+            ArrayList<Wood> woodArrayList = new ArrayList<>();
+            woodArrayList.add(wood);
+            woodMap.put(UUID, woodArrayList);
         }
     }
 
     public static void updateUndone(int i, Wood wood, boolean undone, UUID UUID) {
         wood.setUndone(undone);
         ArrayList<Wood> newWoodList = woodMap.get(UUID);
-        newWoodList.set(i, wood);
+        newWoodList.remove(i);
+        newWoodList.add(wood);
         woodMap.put(UUID, newWoodList);
     }
 }

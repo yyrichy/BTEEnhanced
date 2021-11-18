@@ -31,6 +31,7 @@ public class Wood {
     private final String schematicLoc;
     private final String targetBlock;
     private float radius;
+    private float radiusSum;
     private int schematicsOverMaxSize = 0;
     private final boolean ignoreAirBlocks;
     private final boolean randomRotation;
@@ -179,7 +180,7 @@ public class Wood {
         int N = 2;
         ArrayList<Tree> points = new ArrayList<>();
         ArrayList<Tree> active = new ArrayList<>();
-        if (Float.isNaN(radius)) radius = averageRadius();
+        if (Float.isNaN(radius)) radius = radiusSum / schematics.size();
         float cellSize = (float) Math.floor(radius / Math.sqrt(N));
         Random generator = new Random();
 
@@ -287,6 +288,7 @@ public class Wood {
                             reader = format.getReader(new FileInputStream(file));
                             clipboard = reader.read(p.getWorld().getWorldData());
                             schematics.add(clipboard);
+                            radiusSum += calculateRadius(clipboard);
                         } else {
                             schematicsOverMaxSize++;
                         }
@@ -303,14 +305,6 @@ public class Wood {
     public static boolean fileIsSchematic(File file) {
         int period = file.getName().lastIndexOf('.');
         return file.getName().substring(period + 1).equals("schematic");
-    }
-
-    public float averageRadius() {
-        float sum = 0;
-        for (Clipboard clipboard : schematics) {
-            sum += calculateRadius(clipboard);
-        }
-        return sum / schematics.size();
     }
 
     public float calculateRadius(Clipboard clipboard) {

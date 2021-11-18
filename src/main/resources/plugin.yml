@@ -1,6 +1,6 @@
 main: com.github.vaporrrr.bteenhanced.BTEEnhanced
 name: BTEEnhanced
-version: 1.0-SNAPSHOT
+version: 1.0.0-SNAPSHOT
 author: VapoR
 depend: [WorldEdit]
 commands:

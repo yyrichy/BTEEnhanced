@@ -1,11 +1,11 @@
 # BTEEnhanced (1.12.2) 🍝
 
-Created for the BuildtheEarth project to make creating custom forests easier. Uses [Bridson's algorithm](https://sighack.com/post/poisson-disk-sampling-bridsons-algorithm) for poisson disk sampling (randomly picking packed points to place trees at).
+Bukkit plugin created for the BuildtheEarth project to make creating custom forests easier. Uses [Bridson's algorithm](https://sighack.com/post/poisson-disk-sampling-bridsons-algorithm) for poisson disk sampling (randomly picking packed points to place trees at).
 
 Commands:
-- `/wood <schematic(s)> <blockID> <flags -includeAir,-dontRotate,-r:x>`
-- `/wood-undo`
-- `/wood-redo`
+- `/wood <schematic(s)> <blockID> <flags -includeAir,-dontRotate,-r:x>` Explained in the next section
+- `/wood-undo` Undoes /wood, max number of undoes is set in config
+- `/wood-redo` Redoes /wood, max number of redoes is set in config
 
 Dependencies:
 - `WorldEdit`
