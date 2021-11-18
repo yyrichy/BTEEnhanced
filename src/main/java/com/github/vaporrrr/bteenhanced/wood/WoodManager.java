@@ -81,7 +81,7 @@ public class WoodManager {
         int index = -1;
         Wood wood = null;
         ArrayList<Wood> woodArrayList = woodMap.get(p.getUniqueId());
-        for (int i = 0; i < woodArrayList.size(); i++) {
+        for (int i = woodArrayList.size() - 1; i >= 0; i--) {
             wood = woodArrayList.get(i);
             if (wood.isUndone()) {
                 editSession = wood.getEditSession();
