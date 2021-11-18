@@ -53,8 +53,9 @@ public class WoodManager {
         EditSession editSession = null;
         int index = -1;
         Wood wood = null;
-        for (int i = woodMap.size() - 1; i >= 0; i--) {
-            wood = woodMap.get(p.getUniqueId()).get(i);
+        ArrayList<Wood> woodArrayList = woodMap.get(p.getUniqueId());
+        for (int i = woodArrayList.size() - 1; i >= 0; i--) {
+            wood = woodArrayList.get(i);
             if (!wood.isUndone()) {
                 editSession = wood.getEditSession();
                 index = i;
@@ -79,8 +80,9 @@ public class WoodManager {
         EditSession editSession = null;
         int index = -1;
         Wood wood = null;
-        for (int i = 0; i < woodMap.size(); i++) {
-            wood = woodMap.get(p.getUniqueId()).get(i);
+        ArrayList<Wood> woodArrayList = woodMap.get(p.getUniqueId());
+        for (int i = 0; i < woodArrayList.size(); i++) {
+            wood = woodArrayList.get(i);
             if (wood.isUndone()) {
                 editSession = wood.getEditSession();
                 index = i;

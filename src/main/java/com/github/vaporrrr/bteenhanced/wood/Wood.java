@@ -20,6 +20,9 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -91,10 +94,14 @@ public class Wood {
                 }
             }
             if (directory.exists()) {
-                File file = new File();
-                setSchematics(directory);
+                if (inBaseDirectory(schematicsFolder, directory)) {
+                    setSchematics(directory);
+                } else {
+                    p.printError("Only files inside the schematics folder are allowed.");
+                    return;
+                }
             } else {
-                p.printError("Folder path does not exist.");
+                p.printError("Folder does not exist.");
                 return;
             }
         } else {
@@ -103,10 +110,16 @@ public class Wood {
             ClipboardFormat format = ClipboardFormat.SCHEMATIC;
             ClipboardReader reader;
             try {
-                reader = format.getReader(new FileInputStream(file));
-                clipboard = reader.read(p.getWorld().getWorldData());
-            } catch (IOException e) {
-                p.printError("Schematic " + file.getName() + " not found.");
+                if (inBaseDirectory(schematicsFolder, file)) {
+                    reader = format.getReader(new FileInputStream(file));
+                    clipboard = reader.read(p.getWorld().getWorldData());
+                } else {
+                    p.printError("Only files inside the schematics folder are allowed.");
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                p.printError("Schematic " + file.getName() + " does not exist.");
                 return;
             }
             schematics.add(clipboard);
@@ -302,5 +315,11 @@ public class Wood {
 
     public float calculateRadius(Clipboard clipboard) {
         return Math.max(clipboard.getRegion().getWidth() / 2f, clipboard.getRegion().getLength() / 2f) + 1;
+    }
+
+    public boolean inBaseDirectory(File base, File user) {
+        URI parentURI = base.toURI();
+        URI childURI = user.toURI();
+        return !parentURI.relativize(childURI).isAbsolute();
     }
 }
