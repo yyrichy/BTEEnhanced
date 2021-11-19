@@ -180,6 +180,7 @@ public class Wood {
                 return;
             }
         }
+        WoodManager.add(this, p.getUniqueId());
         p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics in pool. " + (schematicsOverMaxSize == 0 ? "" : schematicsOverMaxSize + " schematics too large."));
     }
 
