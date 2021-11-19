@@ -7,6 +7,14 @@ Commands:
 - `/wood-undo` Undoes /wood, max number of undoes is set in config
 - `/wood-redo` Redoes /wood, max number of redoes is set in config
 
+Permissions:
+- `bteenhanced.*`  Wildcard
+- `bteenhanced.reload` Reload config
+- `bteenhanced.wood`Allows usage of /wood, /wood-undo, and /wood-redo
+- `bteenhanced.wood.all` Allows setting the /wood directory to *, using all schematics in the folder. Not a good idea since there will likely be large builds there. Instead, trees should be placed in a tree folder.
+
+Config: Look at the config.yml
+
 Dependencies:
 - `WorldEdit`
 

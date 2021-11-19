@@ -10,7 +10,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.*;
 
 public class WoodManager {
-    private static Map<UUID, ArrayList<Wood>> woodMap = Maps.newHashMap();
+    private static final Map<UUID, ArrayList<Wood>> woodMap = Maps.newHashMap();
     private static final Plugin plugin = BTEEnhanced.getPlugin(BTEEnhanced.class);
 
     public static void create(Player p, String schematicLoc, String targetBlock, ArrayList<String> flags) {

@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -39,7 +37,7 @@ public class Wood {
     private EditSession editSession;
     private Tree[][] surfaceGrid;
     private Tree[][] grid;
-    private ArrayList<Clipboard> schematics = new ArrayList<>();
+    private final ArrayList<Clipboard> schematics = new ArrayList<>();
     private BlockVector minPoint;
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
     private static final Plugin plugin = BTEEnhanced.getPlugin(BTEEnhanced.class);
@@ -84,7 +82,12 @@ public class Wood {
         if (schematicLoc.charAt(schematicLoc.length() - 1) == '*') {
             File directory;
             if (schematicLoc.length() == 1) {
-                directory = schematicsFolder;
+                if (!p.hasPermission("bteenhanced.wood.all")) {
+                    p.printError("You do not have permission for using the entire schematics folder.");
+                    return;
+                } else {
+                    directory = schematicsFolder;
+                }
             } else {
                 String fileSeperator = schematicLoc.substring(schematicLoc.length() - 1 - File.separator.length(), schematicLoc.length() - 1);
                 if (fileSeperator.equals(File.separator) || fileSeperator.equals("/")) {
@@ -112,6 +115,10 @@ public class Wood {
             ClipboardReader reader;
             try {
                 if (inBaseDirectory(schematicsFolder, file)) {
+                    if (file.length() > plugin.getConfig().getInt("MaxSchemSize")) {
+                        p.printError("Schematic is over max size.");
+                        return;
+                    }
                     reader = format.getReader(new FileInputStream(file));
                     clipboard = reader.read(p.getWorld().getWorldData());
                 } else {
@@ -119,10 +126,10 @@ public class Wood {
                     return;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 p.printError("Schematic " + file.getName() + " does not exist.");
                 return;
             }
+            radiusSum = calculateRadius(clipboard);
             schematics.add(clipboard);
         }
 
@@ -173,7 +180,7 @@ public class Wood {
                 return;
             }
         }
-        p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics used. " + (schematicsOverMaxSize == 0 ? "" : " schematics too large."));
+        p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics in pool. " + (schematicsOverMaxSize == 0 ? "" : schematicsOverMaxSize + " schematics too large."));
     }
 
     private ArrayList<Tree> poissonDiskSampling(int k, Tree p0, int width, int height) {
