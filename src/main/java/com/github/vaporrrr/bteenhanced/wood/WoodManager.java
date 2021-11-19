@@ -34,18 +34,16 @@ public class WoodManager {
             }
         }
         Wood wood = new Wood(p, schematicLoc, targetBlock, radius, ignoreAir, randomRotation);
-        add(wood, p.getUniqueId());
         wood.execute();
     }
 
     public static void create(Player p, String schematicLoc, String targetBlock) {
         Wood wood = new Wood(p, schematicLoc, targetBlock, Float.NaN, true, true);
-        add(wood, p.getUniqueId());
         wood.execute();
     }
 
     public static void undo(Player p) {
-        if (woodMap == null || !woodMap.containsKey(p.getUniqueId())) {
+        if (!woodMap.containsKey(p.getUniqueId())) {
             p.printError("Nothing to undo, could not find player in map.");
             return;
         }
@@ -72,7 +70,7 @@ public class WoodManager {
     }
 
     public static void redo(Player p) {
-        if (woodMap == null || !woodMap.containsKey(p.getUniqueId())) {
+        if (!woodMap.containsKey(p.getUniqueId())) {
             p.printError("Nothing to redo, could not find player in map.");
             return;
         }
@@ -112,7 +110,7 @@ public class WoodManager {
         }
     }
 
-    public static void updateUndone(int i, Wood wood, boolean undone, UUID UUID) {
+    private static void updateUndone(int i, Wood wood, boolean undone, UUID UUID) {
         wood.setUndone(undone);
         ArrayList<Wood> newWoodList = woodMap.get(UUID);
         newWoodList.remove(i);
