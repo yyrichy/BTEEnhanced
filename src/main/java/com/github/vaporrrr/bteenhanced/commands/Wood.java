@@ -13,15 +13,13 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.UUID;
 
 public class Wood implements CommandExecutor {
-    private Map<UUID, Wood> woodMap;
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
-        if (!commandSender.hasPermission("bteplus.wood") && !commandSender.isOp()) {
+        if (!commandSender.hasPermission("bteenhanced.wood") && !commandSender.isOp()) {
             return false;
         }
         if (!(commandSender instanceof Player)) {

@@ -1,18 +1,40 @@
-main: com.github.vaporrrr.bteenhanced.Main
-name: BTEEnhanced
-version: 1.0-SNAPSHOT
+---
 author: VapoR
-depend: [WorldEdit]
 commands:
   wood:
     description: Creates a forest/wood in your selection from schematics
-    usage: /wood <schematic(s)> <blockID> <-ua>
-    permission: bteenhanced.wood
-  wood-undo:
-    description: Undo the /wood command
-    usage: /wood-undo
-    permission: bteenhanced.wood
+    usage: /wood <schematic(s)> <blockID> <-includeAir,-dontRotate,-r:x>
   wood-redo:
     description: Redo the /wood command
     usage: /wood-redo
-    permission: bteenhanced.wood
+  wood-undo:
+    description: Undo the /wood command
+    usage: /wood-undo
+  bteenhanced-reload:
+    description: Reload config
+    usage: /bteenhanced-reload
+permissions:
+  bteenhanced.*:
+    description: Wildcard permission
+    default: op
+    children:
+      bteenhanced.wood: true
+      bteenhanced.wood.all: true
+      bteenhanced.reload: true
+  bteenhanced.reload:
+    description: Reload config
+    default: op
+  bteenhanced.wood.*:
+    description: Allows /wood /wood-undo and /wood-redo
+    default: op
+    children:
+      bteenhanced.wood.all: true
+  bteenhanced.wood.all:
+    description: Allows people to use all files in schematics folder with *
+    default: op
+
+depend:
+  - WorldEdit
+main: ${project.groupId}.${project.artifactId}.${project.name}
+name: ${project.name}
+version: ${project.version}
