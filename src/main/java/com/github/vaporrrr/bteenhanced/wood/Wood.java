@@ -31,11 +31,13 @@ public class Wood {
     private float radius;
     private float radiusSum;
     private int schematicsOverMaxSize = 0;
+    private int selectedBlocks = 0;
     private final boolean ignoreAirBlocks;
     private final boolean randomRotation;
     private boolean undone = false;
+    private boolean inverseMask = false;
     private EditSession editSession;
-    private Tree[][] surfaceGrid;
+    private Tree[][] possibleVectorsGrid;
     private Tree[][] grid;
     private final ArrayList<Clipboard> schematics = new ArrayList<>();
     private BlockVector minPoint;
@@ -45,11 +47,16 @@ public class Wood {
     public Wood(Player p, String schematicLoc, String targetBlock, float radius, boolean ignoreAirBlocks, boolean randomRotation) {
         this.p = p;
         this.schematicLoc = schematicLoc;
-        this.targetBlock = targetBlock;
         this.radius = radius;
         this.ignoreAirBlocks = ignoreAirBlocks;
         this.randomRotation = randomRotation;
         this.editSession = new EditSession((LocalWorld) p.getWorld(), -1);
+        if (targetBlock.startsWith("!") && targetBlock.length() > 1) {
+            this.targetBlock = targetBlock.substring(1);
+            this.inverseMask = true;
+        } else {
+            this.targetBlock = targetBlock;
+        }
     }
 
     public EditSession getEditSession() {
@@ -133,34 +140,35 @@ public class Wood {
             schematics.add(clipboard);
         }
 
-        surfaceGrid = new Tree[region.getWidth()][region.getLength()];
+        possibleVectorsGrid = new Tree[region.getWidth()][region.getLength()];
         Vector minimumPoint = region.getMinimumPoint();
         minPoint = new BlockVector(minimumPoint.getX(), minimumPoint.getY(), minimumPoint.getZ());
         editSession = new EditSession((LocalWorld) p.getWorld(), -1);
         boolean startingPointSet = false;
-        BlockVector blockVector = null;
+        BlockVector startBlockVector = null;
         for (BlockVector p : region) {
-            if (editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir()) {
-                BaseBlock block = editSession.getBlock(p);
-                if ((block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock))) {
+            BaseBlock block = editSession.getBlock(p);
+            if (editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir() && !block.isAir()) {
+                if (((block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock))) != inverseMask) {
                     int pX = Math.abs((int) (p.getX() - minPoint.getX()));
                     int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
-                    Tree tree = surfaceGrid[pX][pZ];
+                    Tree tree = possibleVectorsGrid[pX][pZ];
                     if (tree == null || tree.getY() < (int) p.getY()) {
-                        surfaceGrid[pX][pZ] = new Tree(p);
+                        possibleVectorsGrid[pX][pZ] = new Tree(p);
+                        selectedBlocks++;
                         if (!startingPointSet) {
-                            blockVector = surfaceGrid[pX][pZ].getBlockVector();
+                            startBlockVector = possibleVectorsGrid[pX][pZ].getBlockVector();
                             startingPointSet = true;
                         }
                     }
                 }
             }
         }
-        if (surfaceGrid == null) {
-            p.printError("No suitable surface points found. Use block ID to specify what block you want to place trees on.");
+        if (selectedBlocks == 0) {
+            p.printError("No suitable surface points found. No blocks had air above and " + (inverseMask ? "weren't " : "were ") + targetBlock);
             return;
         }
-        ArrayList<Tree> points = poissonDiskSampling(plugin.getConfig().getInt("MaxTries"), new Tree(blockVector, getRandomSchematic()), region.getWidth(), region.getLength());
+        ArrayList<Tree> points = poissonDiskSampling(plugin.getConfig().getInt("MaxTries"), new Tree(startBlockVector, getRandomSchematic()), region.getWidth(), region.getLength());
 
         Random rand = new Random();
         for (Tree tree : points) {
@@ -181,7 +189,7 @@ public class Wood {
             }
         }
         WoodManager.add(this, p.getUniqueId());
-        p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics in pool. " + (schematicsOverMaxSize == 0 ? "" : schematicsOverMaxSize + " schematics too large."));
+        p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics in pool. " + selectedBlocks + " blocks matched mask. " + (schematicsOverMaxSize == 0 ? "" : schematicsOverMaxSize + " schematics too large."));
     }
 
     private ArrayList<Tree> poissonDiskSampling(int k, Tree p0, int width, int height) {
@@ -222,7 +230,7 @@ public class Wood {
                     continue;
                 }
 
-                Tree pnew = surfaceGrid[(int) pnewx][(int) pnewz];
+                Tree pnew = possibleVectorsGrid[(int) pnewx][(int) pnewz];
                 pnew = new Tree(pnew.getBlockVector(), randomClipboard);
                 points.add(pnew);
                 insertPoint(cellSize, pnew);
@@ -253,7 +261,7 @@ public class Wood {
         if (pX < 0 || pZ < 0 || pX >= width || pZ >= height) {
             return false;
         }
-        if (surfaceGrid[pX][pZ] == null) {
+        if (possibleVectorsGrid[pX][pZ] == null) {
             return false;
         }
         /* Check neighboring eight cells */
