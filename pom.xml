@@ -6,7 +6,7 @@
 
     <groupId>com.github.vaporrrr</groupId>
     <artifactId>bteenhanced</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-BETA</version>
     <packaging>jar</packaging>
 
     <name>BTEEnhanced</name>
@@ -56,7 +56,7 @@
 
     <build>
         <!--suppress UnresolvedMavenProperty -->
-        <finalName>${project.artifactId}-${project.version}-alpha-${git.commit.id.abbrev}</finalName>
+        <finalName>${project.artifactId}-${project.version}-${git.commit.id.abbrev}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
