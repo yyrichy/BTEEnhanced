@@ -32,8 +32,8 @@ public class Wood {
     private float radiusSum;
     private int schematicsOverMaxSize = 0;
     private int selectedBlocks = 0;
-    private final boolean ignoreAirBlocks;
-    private final boolean randomRotation;
+    private boolean ignoreAirBlocks = true;
+    private boolean randomRotation = true;
     private boolean undone = false;
     private boolean inverseMask = false;
     private EditSession editSession;
@@ -44,12 +44,39 @@ public class Wood {
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
     private static final Plugin plugin = BTEEnhanced.getPlugin(BTEEnhanced.class);
 
-    public Wood(Player p, String schematicLoc, String targetBlock, float radius, boolean ignoreAirBlocks, boolean randomRotation) {
+    public Wood(Player p, String schematicLoc, String targetBlock, ArrayList<String> flags) {
         this.p = p;
         this.schematicLoc = schematicLoc;
-        this.radius = radius;
-        this.ignoreAirBlocks = ignoreAirBlocks;
-        this.randomRotation = randomRotation;
+        this.radius = Float.NaN;
+        this.editSession = new EditSession((LocalWorld) p.getWorld(), -1);
+        if (targetBlock.startsWith("!") && targetBlock.length() > 1) {
+            this.targetBlock = targetBlock.substring(1);
+            this.inverseMask = true;
+        } else {
+            this.targetBlock = targetBlock;
+        }
+        for (String flag : flags) {
+            if (flag.startsWith("-")) {
+                if (flag.equals("-includeAir")) {
+                    this.ignoreAirBlocks = false;
+                } else if (flag.equals("-dontRotate")) {
+                    this.randomRotation = false;
+                } else if (flag.startsWith("-r:")) {
+                    try {
+                        this.radius = Float.parseFloat(flag.substring(flag.indexOf(':') + 1));
+                    } catch (Exception e) {
+                        p.printError("Radius is not a number.");
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    public Wood(Player p, String schematicLoc, String targetBlock) {
+        this.p = p;
+        this.schematicLoc = schematicLoc;
+        this.radius = Float.NaN;
         this.editSession = new EditSession((LocalWorld) p.getWorld(), -1);
         if (targetBlock.startsWith("!") && targetBlock.length() > 1) {
             this.targetBlock = targetBlock.substring(1);
@@ -188,7 +215,7 @@ public class Wood {
                 return;
             }
         }
-        WoodManager.add(this, p.getUniqueId());
+        localSession.remember(editSession);
         p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics in pool. " + selectedBlocks + " blocks matched mask. " + (schematicsOverMaxSize == 0 ? "" : schematicsOverMaxSize + " schematics too large."));
     }
 

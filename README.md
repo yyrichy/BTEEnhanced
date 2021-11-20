@@ -3,15 +3,16 @@
 Bukkit plugin created for the BuildtheEarth project to make creating custom forests easier. Uses [Bridson's algorithm](https://sighack.com/post/poisson-disk-sampling-bridsons-algorithm) for poisson disk sampling (randomly picking packed points to place trees at).
 
 Commands:
-- `/wood <schematic(s)> [!]<blockID> [flags -includeAir,-dontRotate,-r:x]` Explained in the next section
-- `/wood-undo` Undoes /wood, max number of undoes is set in config
-- `/wood-redo` Redoes /wood, max number of redoes is set in config
+- `/wood <schematic(s)> [!]<blockID> [flags -includeAir,-dontRotate,-r:x]`
+- `/bteenhanced-reload`
 
 Permissions:
 - `bteenhanced.*`  Wildcard
 - `bteenhanced.reload` Reload config
-- `bteenhanced.wood`Allows usage of /wood, /wood-undo, and /wood-redo
+- `bteenhanced.wood`Allows usage of /wood
 - `bteenhanced.wood.all` Allows setting the /wood directory to *, using all schematics in the folder. Not a good idea since there will likely be large builds there. Instead, trees should be placed in a tree folder.
+
+*This plugin saves edit sessions from /wood to the player's local session, so players can use WorldEdit's //undo and //redo. This means players will need to have the WorldEdit permissions for //undo and //redo*
 
 Config: Look at the config.yml
 
@@ -19,6 +20,8 @@ Dependencies:
 - `WorldEdit`
 
 ## How to use /wood
+First make a region selection, all selections such as cuboid, poly, and convex work.
+
 < schematic(s) > is the path of a schematic file or a folder containing schematics. (From the WorldEdit schematics folder)
 Adding a * after the file separator will randomize the schematics from that folder (and subfolders).
 
