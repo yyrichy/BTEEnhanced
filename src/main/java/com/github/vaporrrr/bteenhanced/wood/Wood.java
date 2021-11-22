@@ -22,19 +22,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Wood {
     private final Player p;
     private final String schematicLoc;
-    private final String targetBlock;
+    private String[] targetBlocks;
     private float radius;
     private float radiusSum;
     private int schematicsOverMaxSize = 0;
     private int selectedBlocks = 0;
     private boolean ignoreAirBlocks = true;
     private boolean randomRotation = true;
-    private boolean undone = false;
     private boolean inverseMask = false;
     private EditSession editSession;
     private Tree[][] possibleVectorsGrid;
@@ -44,17 +44,12 @@ public class Wood {
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
     private static final Plugin plugin = BTEEnhanced.getPlugin(BTEEnhanced.class);
 
-    public Wood(Player p, String schematicLoc, String targetBlock, ArrayList<String> flags) {
+    public Wood(Player p, String schematicLoc, String target, ArrayList<String> flags) {
         this.p = p;
         this.schematicLoc = schematicLoc;
         this.radius = Float.NaN;
         this.editSession = new EditSession((LocalWorld) p.getWorld(), -1);
-        if (targetBlock.startsWith("!") && targetBlock.length() > 1) {
-            this.targetBlock = targetBlock.substring(1);
-            this.inverseMask = true;
-        } else {
-            this.targetBlock = targetBlock;
-        }
+        setTargetBlocks(target);
         for (String flag : flags) {
             if (flag.startsWith("-")) {
                 if (flag.equals("-includeAir")) {
@@ -73,29 +68,12 @@ public class Wood {
         }
     }
 
-    public Wood(Player p, String schematicLoc, String targetBlock) {
+    public Wood(Player p, String schematicLoc, String target) {
         this.p = p;
         this.schematicLoc = schematicLoc;
         this.radius = Float.NaN;
         this.editSession = new EditSession((LocalWorld) p.getWorld(), -1);
-        if (targetBlock.startsWith("!") && targetBlock.length() > 1) {
-            this.targetBlock = targetBlock.substring(1);
-            this.inverseMask = true;
-        } else {
-            this.targetBlock = targetBlock;
-        }
-    }
-
-    public EditSession getEditSession() {
-        return editSession;
-    }
-
-    public boolean isUndone() {
-        return undone;
-    }
-
-    public void setUndone(boolean undone) {
-        this.undone = undone;
+        setTargetBlocks(target);
     }
 
     public void execute() {
@@ -123,21 +101,16 @@ public class Wood {
                     directory = schematicsFolder;
                 }
             } else {
-                String fileSeperator = schematicLoc.substring(schematicLoc.length() - 1 - File.separator.length(), schematicLoc.length() - 1);
-                if (fileSeperator.equals(File.separator) || fileSeperator.equals("/")) {
+                String fileSeparator = schematicLoc.substring(schematicLoc.length() - 1 - File.separator.length(), schematicLoc.length() - 1);
+                if (fileSeparator.equals(File.separator) || (fileSeparator.equals("/") && "\\".equals(File.separator))) {
                     directory = new File(schematicsFolder + File.separator + schematicLoc.substring(0, schematicLoc.length() - 2));
                 } else {
                     p.printError("Could not understand the path.");
                     return;
                 }
             }
-            if (directory.exists()) {
-                if (inBaseDirectory(schematicsFolder, directory)) {
-                    setSchematics(directory);
-                } else {
-                    p.printError("Only files inside the schematics folder are allowed.");
-                    return;
-                }
+            if (directory.exists() && inBaseDirectory(schematicsFolder, directory)) {
+                loadSchematics(directory);
             } else {
                 p.printError("Folder does not exist.");
                 return;
@@ -156,14 +129,14 @@ public class Wood {
                     reader = format.getReader(new FileInputStream(file));
                     clipboard = reader.read(p.getWorld().getWorldData());
                 } else {
-                    p.printError("Only files inside the schematics folder are allowed.");
+                    p.printError("Schematic " + file.getName() + " does not exist.");
                     return;
                 }
             } catch (Exception e) {
                 p.printError("Schematic " + file.getName() + " does not exist.");
                 return;
             }
-            radiusSum = calculateRadius(clipboard);
+            radiusSum = radius(clipboard);
             schematics.add(clipboard);
         }
 
@@ -171,39 +144,38 @@ public class Wood {
         Vector minimumPoint = region.getMinimumPoint();
         minPoint = new BlockVector(minimumPoint.getX(), minimumPoint.getY(), minimumPoint.getZ());
         editSession = new EditSession((LocalWorld) p.getWorld(), -1);
-        boolean startingPointSet = false;
         BlockVector startBlockVector = null;
         for (BlockVector p : region) {
             BaseBlock block = editSession.getBlock(p);
             if (editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir() && !block.isAir()) {
-                if (((block.getId() + ":" + block.getData()).equals(targetBlock) || (block.getData() == 0 && String.valueOf(block.getId()).equals(targetBlock))) != inverseMask) {
+                if (matchesTarget(block) != inverseMask) {
                     int pX = Math.abs((int) (p.getX() - minPoint.getX()));
                     int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
                     Tree tree = possibleVectorsGrid[pX][pZ];
                     if (tree == null || tree.getY() < (int) p.getY()) {
                         possibleVectorsGrid[pX][pZ] = new Tree(p);
                         selectedBlocks++;
-                        if (!startingPointSet) {
+                        if (startBlockVector == null) {
                             startBlockVector = possibleVectorsGrid[pX][pZ].getBlockVector();
-                            startingPointSet = true;
                         }
                     }
                 }
             }
         }
         if (selectedBlocks == 0) {
-            p.printError("No suitable surface points found. No blocks had air above and " + (inverseMask ? "weren't " : "were ") + targetBlock);
+            p.printError("No suitable surface points found. No blocks had air above and " + (inverseMask ? "weren't " : "were ") + Arrays.toString(targetBlocks));
             return;
         }
+
         ArrayList<Tree> points = poissonDiskSampling(plugin.getConfig().getInt("MaxTries"), new Tree(startBlockVector, getRandomSchematic()), region.getWidth(), region.getLength());
 
-        Random rand = new Random();
+        Random random = new Random();
         for (Tree tree : points) {
             Vector pos = new Vector(tree.getX(), tree.getY() + 1, tree.getZ());
             ClipboardHolder clipboardHolder = new ClipboardHolder(tree.getClipboard(), p.getWorld().getWorldData());
             if (randomRotation) {
                 AffineTransform transform = new AffineTransform();
-                transform.rotateY(rand.nextInt(4) * 90);
+                transform.rotateY(random.nextInt(4) * 90);
                 clipboardHolder.setTransform(transform);
             }
             PasteBuilder pb = clipboardHolder.createPaste(editSession, editSession.getWorld().getWorldData()).to(pos)
@@ -211,7 +183,7 @@ public class Wood {
             try {
                 Operations.completeLegacy(pb.build());
             } catch (MaxChangedBlocksException e) {
-                p.printError("Max changed blocks.");
+                p.printError("Number of blocks changed exceeds limit set.");
                 return;
             }
         }
@@ -223,6 +195,10 @@ public class Wood {
         int N = 2;
         ArrayList<Tree> points = new ArrayList<>();
         ArrayList<Tree> active = new ArrayList<>();
+        /*
+            This seems to provide okay spacing. With Bridson's algorithm, changing the spacing per tree is not possible.
+            Using trees with a wide range of widths/lengths may result in trees too close or far from each other.
+         */
         if (Float.isNaN(radius)) radius = radiusSum / schematics.size();
         float cellSize = (float) Math.floor(radius / Math.sqrt(N));
         Random generator = new Random();
@@ -302,14 +278,14 @@ public class Wood {
         for (int i = i0; i <= i1; i++)
             for (int j = j0; j <= j1; j++)
                 if (grid[i][j] != null)
-                    if (dist(Math.abs(grid[i][j].getX() - minPoint.getX()), Math.abs(grid[i][j].getZ() - minPoint.getZ()), pX, pZ) < radius)
+                    if (distance(Math.abs(grid[i][j].getX() - minPoint.getX()), Math.abs(grid[i][j].getZ() - minPoint.getZ()), pX, pZ) < radius)
                         return false;
 
         /* If we get here, return true */
         return true;
     }
 
-    private static double dist(double x1, double y1, double x2, double y2) {
+    private static double distance(double x1, double y1, double x2, double y2) {
         return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
     }
 
@@ -317,7 +293,7 @@ public class Wood {
         return schematics.get(new Random().nextInt(schematics.size()));
     }
 
-    private void setSchematics(File directory) {
+    private void loadSchematics(File directory) {
         Clipboard clipboard;
         ClipboardFormat format = ClipboardFormat.SCHEMATIC;
         ClipboardReader reader;
@@ -331,7 +307,7 @@ public class Wood {
                             reader = format.getReader(new FileInputStream(file));
                             clipboard = reader.read(p.getWorld().getWorldData());
                             schematics.add(clipboard);
-                            radiusSum += calculateRadius(clipboard);
+                            radiusSum += radius(clipboard);
                         } else {
                             schematicsOverMaxSize++;
                         }
@@ -339,7 +315,7 @@ public class Wood {
                         p.printError("Schematic " + file.getName() + " not found.");
                     }
                 } else if (file.isDirectory()) {
-                    setSchematics(file);
+                    loadSchematics(file);
                 }
             }
         }
@@ -350,7 +326,25 @@ public class Wood {
         return file.getName().substring(period + 1).equals("schematic");
     }
 
-    public float calculateRadius(Clipboard clipboard) {
+    public void setTargetBlocks(String target) {
+        if (target.startsWith("!") && target.length() > 1) {
+            this.targetBlocks = target.substring(1).split(",");
+            this.inverseMask = true;
+        } else {
+            this.targetBlocks = target.split(",");
+        }
+    }
+
+    public boolean matchesTarget(BaseBlock block) {
+        for (String targetBlock : targetBlocks) {
+            if ((block.getId() + ":" + block.getData()).equals(targetBlock) || (!targetBlock.contains(":") && Integer.toString(block.getId()).equals(targetBlock))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public float radius(Clipboard clipboard) {
         return Math.max(clipboard.getRegion().getWidth() / 2f, clipboard.getRegion().getLength() / 2f) + 1;
     }
 
