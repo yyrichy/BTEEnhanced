@@ -14,6 +14,7 @@ import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.session.PasteBuilder;
 import com.sk89q.worldedit.session.SessionManager;
 import com.sk89q.worldedit.world.World;
+import jdk.nashorn.internal.ir.Block;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -39,6 +40,10 @@ public class Wood {
     private EditSession editSession;
     private Tree[][] possibleVectorsGrid;
     private Tree[][] grid;
+    private float cellSize;
+    private int ncells_width;
+    private int ncells_height;
+    private final ArrayList<Tree> points = new ArrayList<>();
     private final ArrayList<Clipboard> schematics = new ArrayList<>();
     private BlockVector minPoint;
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
@@ -140,11 +145,20 @@ public class Wood {
             schematics.add(clipboard);
         }
 
+        if (Float.isNaN(radius)) radius = radiusSum / schematics.size();
+
         possibleVectorsGrid = new Tree[region.getWidth()][region.getLength()];
+        for (int i = 0; i < region.getWidth(); i++) {
+            for (int j = 0; j < region.getLength(); j++) {
+                possibleVectorsGrid[i][j] = null;
+            }
+        }
         Vector minimumPoint = region.getMinimumPoint();
         minPoint = new BlockVector(minimumPoint.getX(), minimumPoint.getY(), minimumPoint.getZ());
         editSession = new EditSession((LocalWorld) p.getWorld(), -1);
-        BlockVector startBlockVector = null;
+        ArrayList<BlockVector> startBlockVectors = new ArrayList<>();
+        int prevX = 0;
+        int prevZ = 0;
         for (BlockVector p : region) {
             BaseBlock block = editSession.getBlock(p);
             if (editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir() && !block.isAir()) {
@@ -153,12 +167,18 @@ public class Wood {
                     int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
                     Tree tree = possibleVectorsGrid[pX][pZ];
                     if (tree == null || tree.getY() < (int) p.getY()) {
-                        possibleVectorsGrid[pX][pZ] = new Tree(p);
                         selectedBlocks++;
-                        if (startBlockVector == null) {
-                            startBlockVector = possibleVectorsGrid[pX][pZ].getBlockVector();
+                        plugin.getLogger().info(pX + " " + pZ);
+                        if ((Math.abs(pX - prevX) >= radius) || (Math.abs(pZ - prevZ) >= radius)) {
+                            if (!isNeighboring(pX, pZ, region.getWidth(), region.getLength())) {
+                                plugin.getLogger().info("true");
+                                startBlockVectors.add(p);
+                            }
                         }
+                        possibleVectorsGrid[pX][pZ] = new Tree(p);
                     }
+                    prevX = pX;
+                    prevZ = pZ;
                 }
             }
         }
@@ -167,7 +187,26 @@ public class Wood {
             return;
         }
 
-        ArrayList<Tree> points = poissonDiskSampling(plugin.getConfig().getInt("MaxTries"), new Tree(startBlockVector, getRandomSchematic()), region.getWidth(), region.getLength());
+        for (BlockVector p : startBlockVectors) {
+            plugin.getLogger().info("vectors: " + p.getX() + " " + p.getZ());
+        }
+
+        int width = region.getWidth();
+        int height = region.getLength();
+        int MAX_TRIES = plugin.getConfig().getInt("MaxTries");
+        cellSize = (float) Math.floor(radius / Math.sqrt(2));
+        ncells_width = (int) (Math.ceil(width / cellSize) + 1);
+        ncells_height = (int) Math.ceil(height / cellSize) + 1;
+        grid = new Tree[ncells_width][ncells_height];
+        for (int i = 0; i < ncells_width; i++) {
+            for (int j = 0; j < ncells_height; j++) {
+                grid[i][j] = null;
+            }
+        }
+
+        for (BlockVector p : startBlockVectors) {
+            points.addAll(poissonDiskSampling(MAX_TRIES, new Tree(p, getRandomSchematic()), width, height));
+        }
 
         Random random = new Random();
         for (Tree tree : points) {
@@ -192,27 +231,15 @@ public class Wood {
     }
 
     private ArrayList<Tree> poissonDiskSampling(int k, Tree p0, int width, int height) {
-        int N = 2;
         ArrayList<Tree> points = new ArrayList<>();
         ArrayList<Tree> active = new ArrayList<>();
         /*
             This seems to provide okay spacing. With Bridson's algorithm, changing the spacing per tree is not possible.
             Using trees with a wide range of widths/lengths may result in trees too close or far from each other.
          */
-        if (Float.isNaN(radius)) radius = radiusSum / schematics.size();
-        float cellSize = (float) Math.floor(radius / Math.sqrt(N));
         Random generator = new Random();
-
-        int ncells_width = (int) (Math.ceil(width / cellSize) + 1);
-        int ncells_height = (int) Math.ceil(height / cellSize) + 1;
-
         points.add(p0);
         active.add(p0);
-
-        grid = new Tree[ncells_width][ncells_height];
-        for (int i = 0; i < ncells_width; i++)
-            for (int j = 0; j < ncells_height; j++)
-                grid[i][j] = null;
         insertPoint(cellSize, p0);
 
         while (active.size() > 0) {
@@ -228,11 +255,9 @@ public class Wood {
                 int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
                 float pnewx = (float) (pX + new_radius * Math.cos(Math.toRadians(theta)));
                 float pnewz = (float) (pZ + new_radius * Math.sin(Math.toRadians(theta)));
-
                 if (!isValidPoint(cellSize, (int) pnewx, (int) pnewz, radius, width, height, ncells_width, ncells_height)) {
                     continue;
                 }
-
                 Tree pnew = possibleVectorsGrid[(int) pnewx][(int) pnewz];
                 pnew = new Tree(pnew.getBlockVector(), randomClipboard);
                 points.add(pnew);
@@ -241,13 +266,11 @@ public class Wood {
                 found = true;
                 break;
             }
-
             /* If no point was found after k tries, remove p */
             if (!found) {
                 active.remove(random_index);
             }
         }
-
         return points;
     }
 
@@ -283,6 +306,22 @@ public class Wood {
 
         /* If we get here, return true */
         return true;
+    }
+
+    private boolean isNeighboring(int pX, int pZ, int width, int height) {
+        int i0 = (int) Math.max(pX - radius, 0);
+        int i1 = (int) Math.min(pX + radius, width - 1);
+        int j0 = (int) Math.max(pZ - radius, 0);
+        int j1 = (int) Math.min(pZ + radius, height - 1);
+        plugin.getLogger().info(i0 + " " + i1 + " " + j0 + " " + j1);
+
+        for (int i = i0; i <= i1; i++)
+            for (int j = j0; j <= j1; j++)
+                if (possibleVectorsGrid[i][j] != null) {
+                    plugin.getLogger().info(i + " " + j + " not null");
+                    return true;
+                }
+        return false;
     }
 
     private static double distance(double x1, double y1, double x2, double y2) {
