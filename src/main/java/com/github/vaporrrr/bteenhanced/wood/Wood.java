@@ -101,6 +101,7 @@ public class Wood {
             if (schematicLoc.length() == 1) {
                 if (!p.hasPermission("bteenhanced.wood.all")) {
                     p.printError("You do not have permission for using the entire schematics folder.");
+                    plugin.getLogger().warning(p.getName() + "(" + p.getUniqueId() + ") tried using the entire schematics folder.");
                     return;
                 } else {
                     directory = schematicsFolder;
@@ -167,14 +168,12 @@ public class Wood {
                     int pZ = Math.abs((int) (p.getZ() - minPoint.getZ()));
                     Tree tree = possibleVectorsGrid[pX][pZ];
                     if (tree == null || tree.getY() < (int) p.getY()) {
-                        selectedBlocks++;
-                        plugin.getLogger().info(pX + " " + pZ);
                         if ((Math.abs(pX - prevX) >= radius) || (Math.abs(pZ - prevZ) >= radius)) {
                             if (!isNeighboring(pX, pZ, region.getWidth(), region.getLength())) {
-                                plugin.getLogger().info("true");
                                 startBlockVectors.add(p);
                             }
                         }
+                        selectedBlocks++;
                         possibleVectorsGrid[pX][pZ] = new Tree(p);
                     }
                     prevX = pX;
@@ -185,10 +184,6 @@ public class Wood {
         if (selectedBlocks == 0) {
             p.printError("No suitable surface points found. No blocks had air above and " + (inverseMask ? "weren't " : "were ") + Arrays.toString(targetBlocks));
             return;
-        }
-
-        for (BlockVector p : startBlockVectors) {
-            plugin.getLogger().info("vectors: " + p.getX() + " " + p.getZ());
         }
 
         int width = region.getWidth();
@@ -298,13 +293,15 @@ public class Wood {
         int j0 = Math.max(zindex - 1, 0);
         int j1 = Math.min(zindex + 1, gheight - 1);
 
-        for (int i = i0; i <= i1; i++)
-            for (int j = j0; j <= j1; j++)
-                if (grid[i][j] != null)
-                    if (distance(Math.abs(grid[i][j].getX() - minPoint.getX()), Math.abs(grid[i][j].getZ() - minPoint.getZ()), pX, pZ) < radius)
+        for (int i = i0; i <= i1; i++) {
+            for (int j = j0; j <= j1; j++) {
+                if (grid[i][j] != null) {
+                    if (distance(Math.abs(grid[i][j].getX() - minPoint.getX()), Math.abs(grid[i][j].getZ() - minPoint.getZ()), pX, pZ) < radius) {
                         return false;
-
-        /* If we get here, return true */
+                    }
+                }
+            }
+        }
         return true;
     }
 
@@ -313,14 +310,13 @@ public class Wood {
         int i1 = (int) Math.min(pX + radius, width - 1);
         int j0 = (int) Math.max(pZ - radius, 0);
         int j1 = (int) Math.min(pZ + radius, height - 1);
-        plugin.getLogger().info(i0 + " " + i1 + " " + j0 + " " + j1);
-
-        for (int i = i0; i <= i1; i++)
-            for (int j = j0; j <= j1; j++)
+        for (int i = i0; i <= i1; i++) {
+            for (int j = j0; j <= j1; j++) {
                 if (possibleVectorsGrid[i][j] != null) {
-                    plugin.getLogger().info(i + " " + j + " not null");
                     return true;
                 }
+            }
+        }
         return false;
     }
 
