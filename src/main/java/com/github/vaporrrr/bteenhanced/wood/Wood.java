@@ -83,6 +83,7 @@ public class Wood {
     }
 
     public void execute() {
+        final long startTime = System.nanoTime();
         File schematicsFolder = new File(we.getDataFolder() + File.separator + "schematics");
         WorldEdit worldEdit = WorldEdit.getInstance();
         SessionManager manager = worldEdit.getSessionManager();
@@ -166,27 +167,28 @@ public class Wood {
         for (BlockVector p : region) {
             BaseBlock block = editSession.getBlock(p);
             if ((editSession.getBlock(new Vector(p.getX(), p.getY() + 1, p.getZ())).isAir() && !block.isAir()) && matchesTarget(block) != inverseMask) {
+                int x = Math.abs((int) (p.getX() - minPoint.getX()));
+                int z = Math.abs((int) (p.getZ() - minPoint.getZ()));
                 if (startBlockVectors.size() == 0) {
                     startBlockVectors.add(p);
+                    possibleVectorsGrid[x][z] = new Tree(p);
+                    selectedBlocks++;
                 } else {
-                    int x = Math.abs((int) (p.getX() - minPoint.getX()));
-                    int z = Math.abs((int) (p.getZ() - minPoint.getZ()));
                     Tree tree = possibleVectorsGrid[x][z];
                     if (tree == null || tree.getY() < (int) p.getY()) {
                         int xDist = x - prevX;
                         int zDist = z - prevZ;
+                        // Allowing trees to be 1 closer produces better results in testing
                         int radius2 = (int) (radius - 1);
                         if (zDist > radius2) {
-                            plugin.getLogger().info(x + " " + z);
-                            plugin.getLogger().info("z> " + zDist);
                             startBlockVectors.add(p);
                         } else if ((xDist * xDist + zDist * zDist) + 1 > radius2 * radius2) {
                             if (!isAdjacentToExistingPoint(x, z, width, height)) {
                                 startBlockVectors.add(p);
                             }
                         }
-                        selectedBlocks++;
                         possibleVectorsGrid[x][z] = new Tree(p);
+                        selectedBlocks++;
                         prevX = x;
                         prevZ = z;
                     }
@@ -196,10 +198,6 @@ public class Wood {
         if (selectedBlocks == 0) {
             p.printError("No suitable surface points found. No blocks had air above and " + (inverseMask ? "weren't " : "were ") + Arrays.toString(targetBlocks));
             return;
-        }
-
-        for (BlockVector p : startBlockVectors) {
-            plugin.getLogger().info("start point " + p.getX() + p.getZ());
         }
 
         final int MAX_TRIES = plugin.getConfig().getInt("MaxTries");
@@ -236,7 +234,7 @@ public class Wood {
         }
         localSession.remember(editSession);
         p.print("Done! " + points.size() + " trees pasted. " + schematics.size() + " schematics in pool. " + selectedBlocks + " blocks matched mask. " + (schematicsOverMaxSize == 0 ? "" : schematicsOverMaxSize + " schematics too large."));
-        p.print("radius " + radius);
+        p.print("Took " + (System.nanoTime() - startTime) / 1e6 + " milliseconds.");
     }
 
     private ArrayList<Tree> poissonDiskSampling(int k, Tree startingPoint, int width, int height) {
@@ -319,6 +317,7 @@ public class Wood {
     }
 
     private boolean isAdjacentToExistingPoint(int x, int z, int width, int height) {
+        // Allowing trees to be 1 closer produces better results in testing
         int i0 = (int) Math.max(x - radius + 1, 0);
         int i1 = (int) Math.min(x + radius - 1, width - 1);
         int j0 = (int) Math.max(z - radius + 1, 0);
