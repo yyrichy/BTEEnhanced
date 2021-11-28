@@ -5,16 +5,19 @@ Bukkit plugin created for the BuildtheEarth project to make creating custom fore
 Commands:
 - `/wood <schematic(s)> [!]<blockID(s)> [flags -includeAir,-dontRotate,-r:x]` (Alias: //wood)
 - `/bteenhanced-reload`
+- `//dell [num]` (Aliases: /dellast, //dellast) Deletes the last [num] amount of points in the selection. (Currently only supports poly2d selections) If [num] is not specified it will delete the last point.
 
 Permissions:
 - `bteenhanced.*`  Wildcard
 - `bteenhanced.reload` Reload config
 - `bteenhanced.wood`Allows usage of /wood
 - `bteenhanced.wood.all` Allows setting the /wood directory to *, using all schematics in the folder. Not a good idea since there will likely be large builds there. Instead, trees should be placed in a tree folder.
+- `bteenhanced.selection.*` Allows usage of all selection related commands
+- `bteenhanced.selection.dellast`  Allows usage of //dell
 
 *This plugin saves edit sessions from /wood to the player's local session, so players can use WorldEdit's //undo and //redo. This means players will need to have the WorldEdit permissions for //undo and //redo*
 
-Config: Look at the config.yml
+Config: Look [here](src/main/resources/config.yml)
 
 Dependencies:
 - `WorldEdit`
