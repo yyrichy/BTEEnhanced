@@ -19,13 +19,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class DelLast implements CommandExecutor {
+public class DelPoint implements CommandExecutor {
     private static final Plugin we = Bukkit.getPluginManager().getPlugin("WorldEdit");
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
-        if (!commandSender.hasPermission("bteenhanced.selection.dellast") && !commandSender.isOp()) {
+        if (!commandSender.hasPermission("bteenhanced.selection.delpoint") && !commandSender.isOp()) {
             return false;
         }
         if (!(commandSender instanceof Player)) {
@@ -35,20 +36,22 @@ public class DelLast implements CommandExecutor {
         Player player = (Player) commandSender;
         com.sk89q.worldedit.entity.Player p = new BukkitPlayer((WorldEditPlugin) we, null, player);
 
-        int numToDelete = 1;
-        if (args.length > 0) {
-            try {
-                numToDelete = Integer.parseInt(args[0]);
-            } catch (NumberFormatException e) {
-                p.printError("Number of points to delete must be an integer.");
-                return true;
-            }
-        }
-        if (numToDelete == 0) {
-            p.print("Ok... why would you try to delete 0 points.");
+        if (args.length < 1) {
+            p.printError("You must specify the point in the selection you want to delete.");
             return true;
-        } else if (numToDelete < 0) {
-            p.printError("You can't delete a negative amount of points.");
+        }
+        int numToDelete;
+        try {
+            numToDelete = Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            p.printError("Point to delete must be an integer.");
+            return true;
+        }
+        if (numToDelete < 0) {
+            p.printError("You can't delete a negative point.");
+            return true;
+        } else if (numToDelete == 0) {
+            p.printError("You can't delete the 0th point, there is none. Points are numbered from 1.");
             return true;
         }
 
@@ -73,16 +76,17 @@ public class DelLast implements CommandExecutor {
         Polygonal2DRegion reg = (Polygonal2DRegion) region;
         List<BlockVector2D> points = reg.getPoints();
 
-        if (numToDelete > points.size() - 1) {
-            p.printError("You can't delete that many points, there must be at least one point left over. You can delete up to " + (points.size() - 1));
+        if (numToDelete > points.size()) {
+            p.printError("Point does not exist. You can delete 1 - " + points.size());
             return true;
         }
 
-        List<BlockVector2D> newPoints = points.subList(0, points.size() - numToDelete);
+        List<BlockVector2D> newPoints = new ArrayList<>(points);
+        newPoints.remove(numToDelete - 1);
         Polygonal2DRegionSelector regionSelector = new Polygonal2DRegionSelector(selectionWorld, newPoints, reg.getMinimumY(), reg.getMaximumY());
         localSession.setRegionSelector(selectionWorld, regionSelector);
         regionSelector.explainRegionAdjust(p, localSession);
-        p.print("Selection edited!");
+        p.print("Point " + numToDelete + " deleted!");
         return true;
     }
 }

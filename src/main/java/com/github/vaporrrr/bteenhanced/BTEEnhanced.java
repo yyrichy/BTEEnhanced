@@ -1,9 +1,7 @@
 package com.github.vaporrrr.bteenhanced;
 
 import com.github.vaporrrr.bteenhanced.bstats.Metrics;
-import com.github.vaporrrr.bteenhanced.commands.DelLast;
-import com.github.vaporrrr.bteenhanced.commands.ReloadConfig;
-import com.github.vaporrrr.bteenhanced.commands.WoodCommand;
+import com.github.vaporrrr.bteenhanced.commands.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class BTEEnhanced extends JavaPlugin {
@@ -18,6 +16,7 @@ public class BTEEnhanced extends JavaPlugin {
         getCommand("wood").setExecutor(new WoodCommand());
         getCommand("bteenhanced-reload").setExecutor(new ReloadConfig());
         getCommand("dellast").setExecutor(new DelLast());
+        getCommand("delpoint").setExecutor(new DelPoint());
         Metrics metrics = new Metrics(this, 13388);
     }
 }

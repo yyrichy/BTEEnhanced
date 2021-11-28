@@ -9,19 +9,30 @@ commands:
   wood:
     description: Creates a forest/wood in your selection from schematics
     usage: /wood <schematic(s)> [!]<blockID(s)> [flags -includeAir,-dontRotate,-r:x]
-    aliases: /wood
+    aliases:
+      - /wood
+      - /w
     permission: bteenhanced.wood
   bteenhanced-reload:
     description: Reload config
     usage: /bteenhanced-reload
     permission: bteenhanced.reload
-  dellast:
-    description: Deletes last point(s) in (currently poly2d only) selection
-    usage: /dellast [num]
+  /dell:
+    description: Deletes last [num] point(s) in (currently poly2d only) selection
+    usage: //dell [num]
     aliases:
+      - dell
+      - dellast
       - /dellast
-      - /dell
     permission: bteenhanced.selection.dellast
+  /delp:
+    description: Deletes the [num] point in (currently poly2d only) selection
+    usage: //delp [num]
+    aliases:
+      - delp
+      - delpoint
+      - /delpoint
+    permission: bteenhanced.selection.delpoint
 permissions:
   bteenhanced.*:
     description: Wildcard permission
@@ -32,6 +43,7 @@ permissions:
       bteenhanced.reload: true
       bteenhanced.selection: true
       bteenhanced.selection.dellast: true
+      bteenhanced.selection.delpoint: true
   bteenhanced.reload:
     description: Reload config
     default: op
@@ -47,6 +59,11 @@ permissions:
     description: Allows usage of all selection related commands
     default: op
     children:
-      bteenhanced.selection.dellastpoint: true
+      bteenhanced.selection.dellast: true
+      bteenhanced.selection.delpoint: true
   bteenhanced.selection.dellast:
     description: Allows usage of //dell
+    default: op
+  bteenhanced.selection.delpoint:
+    description: Allows usage of //delp
+    default: op
