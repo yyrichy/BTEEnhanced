@@ -101,7 +101,7 @@ public class Wood {
         if (schematicLoc.charAt(schematicLoc.length() - 1) == '*') {
             File directory;
             if (schematicLoc.length() == 1) {
-                if (!p.hasPermission("bteenhanced.wood.all")) {
+                if (!p.hasPermission("bteenhanced.admin.allschematics")) {
                     p.printError("You do not have permission for using the entire schematics folder.");
                     plugin.getLogger().warning(p.getName() + "(" + p.getUniqueId() + ") tried using the entire schematics folder.");
                     return;

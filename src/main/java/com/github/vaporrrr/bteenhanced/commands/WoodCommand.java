@@ -19,7 +19,7 @@ public class WoodCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
-        if (!commandSender.hasPermission("bteenhanced.wood") && !commandSender.isOp()) {
+        if (!commandSender.hasPermission("bteenhanced.region.wood") && !commandSender.isOp()) {
             return false;
         }
         if (!(commandSender instanceof Player)) {
@@ -28,17 +28,17 @@ public class WoodCommand implements CommandExecutor {
         }
         Player player = (Player) commandSender;
         com.sk89q.worldedit.entity.Player p = new BukkitPlayer((WorldEditPlugin) we, null, player);
-        if (args.length < 1) {
+        if (args.length == 0) {
             p.printError("Specify a schematic name.");
             return false;
         }
-        if (args.length < 2) {
+        if (args.length == 1) {
             p.printError("Specify the block you want trees to be placed above.");
             return false;
         }
         // If flags
         Wood wood;
-        if (args.length > 2) {
+        if (args.length >= 3) {
             ArrayList<String> flags = new ArrayList<>(Arrays.asList(args).subList(2, args.length));
             wood = new Wood(p, args[0], args[1], flags);
         } else {

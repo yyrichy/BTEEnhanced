@@ -17,6 +17,7 @@ public class BTEEnhanced extends JavaPlugin {
         getCommand("bteenhanced-reload").setExecutor(new ReloadConfig());
         getCommand("dellast").setExecutor(new DelLast());
         getCommand("delpoint").setExecutor(new DelPoint());
+        getCommand("bwall").setExecutor(new Wall());
         Metrics metrics = new Metrics(this, 13388);
     }
 }

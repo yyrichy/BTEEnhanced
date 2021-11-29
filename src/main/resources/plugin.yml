@@ -12,11 +12,17 @@ commands:
     aliases:
       - /wood
       - /w
-    permission: bteenhanced.wood
+    permission: bteenhanced.region.wood
   bteenhanced-reload:
     description: Reload config
     usage: /bteenhanced-reload
     permission: bteenhanced.reload
+  bwall:
+    description: Creates walls around a selection
+    usage: /bwall <pattern>
+    aliases:
+      - /bwall
+    permission: bteenhanced.region.wall
   /dell:
     description: Deletes last [num] point(s) in (currently poly2d only) selection
     usage: //dell [num]
@@ -36,34 +42,37 @@ commands:
 permissions:
   bteenhanced.*:
     description: Wildcard permission
-    default: op
     children:
-      bteenhanced.wood: true
-      bteenhanced.wood.all: true
+      bteenhanced.region: true
+      bteenhanced.region.wood: true
       bteenhanced.reload: true
       bteenhanced.selection: true
       bteenhanced.selection.dellast: true
       bteenhanced.selection.delpoint: true
-  bteenhanced.reload:
-    description: Reload config
-    default: op
-  bteenhanced.wood.*:
-    description: Allows usage of /wood
-    default: op
+  bteenhanced.admin.*:
+    description: All "admin" perms
     children:
-      bteenhanced.wood.all: true
-  bteenhanced.wood.all:
-    description: Allows people to use all files in schematics folder with *
-    default: op
+      bteenhanced.admin.reload: true
+      bteenhanced.admin.allschematics: true
+  bteenhanced.admin.reload:
+    description: Reload config
+  bteenhanced.admin.allschematics:
+    description: Allows people to use all files in schematics folder
+  bteenhanced.region.*:
+    description: All region commands
+    children:
+      bteenhanced.region.wood: true
+      bteenhanced.region.wall: true
+  bteenhanced.region.wood:
+    description: Allows usage of /wood
+  bteenhanced.region.wall:
+    description: Allows usage of /bwall
   bteenhanced.selection.*:
     description: Allows usage of all selection related commands
-    default: op
     children:
       bteenhanced.selection.dellast: true
       bteenhanced.selection.delpoint: true
   bteenhanced.selection.dellast:
     description: Allows usage of //dell
-    default: op
   bteenhanced.selection.delpoint:
     description: Allows usage of //delp
-    default: op

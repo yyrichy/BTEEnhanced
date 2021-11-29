@@ -2,30 +2,23 @@
 
 Bukkit plugin created for the BuildtheEarth project to make creating custom forests easier. Uses [Bridson's algorithm](https://sighack.com/post/poisson-disk-sampling-bridsons-algorithm) for poisson disk sampling (randomly picking packed points to place trees at).
 
-Commands:
+**Commands:**
 - `/wood <schematic(s)> [!]<blockID(s)> [flags -includeAir,-dontRotate,-r:x]` *(Alias: //wood, //w)*
+- `/bwall <pattern>` Create walls around a selection
 - `/bteenhanced-reload`
 - `//dell [num]` *(Aliases: /dellast, /dell, //dellast)* Deletes the last `[num]` amount of points in the selection. (Currently only supports poly2d selections) If `[num]` is not specified it will delete the last point.
 - `//delp <num>` *(Aliases: /delpoint, /delp, //delpoint)* Deletes the `<num>`'th point in the selection. (Currently only supports poly2d selections)
 
-Permissions:
-- `bteenhanced.*`  Wildcard
-- `bteenhanced.reload` Reload config
-- `bteenhanced.wood`Allows usage of /wood
-- `bteenhanced.wood.all` Allows setting the /wood directory to *, using all schematics in the folder. Not a good idea since there will likely be large builds there. Instead, trees should be placed in a tree folder.
-- `bteenhanced.selection.*` Allows usage of all selection related commands
-- `bteenhanced.selection.dellast`  Allows usage of //dell
-- `bteenhanced.selection.delpoint` Allows usage of //delp
+**Permissions:** Look [here](src/main/resources/plugin.yml)
 
-*This plugin saves edit sessions from /wood to the player's local session, so players can use WorldEdit's //undo and //redo. This means players will need to have the WorldEdit permissions for //undo and //redo*
+**Config:** Look [here](src/main/resources/config.yml)
 
-Config: Look [here](src/main/resources/config.yml)
-
-Dependencies:
+**Dependencies:**
 - `WorldEdit`
 
 ## How to use /wood
 First make a region selection, all selections such as cuboid, poly, and convex work.
+*This plugin saves edit sessions from /wood to the player's local session, so players can use WorldEdit's //undo and //redo. This means players will need to have the WorldEdit permissions for //undo and //redo*
 
 <schematic(s)> is the path of a schematic file or a folder containing schematics. (From the WorldEdit schematics folder)
 Adding a * after the file separator will randomize the schematics from that folder (and subfolders).
