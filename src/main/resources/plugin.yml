@@ -8,7 +8,7 @@ depend:
 commands:
   wood:
     description: Creates a forest/wood in your selection from schematics
-    usage: /wood <schematic(s)> [!]<blockID(s)> [flags -includeAir,-dontRotate,-r:x]
+    usage: /wood {schematic(s)} [!]{block ID(s)} [flags -includeAir,-dontRotate,-r:x]
     aliases:
       - /wood
       - /w
@@ -17,9 +17,16 @@ commands:
     description: Reload config
     usage: /bteenhanced-reload
     permission: bteenhanced.reload
+  treebrush:
+    description: Easy to use brush specifically for trees on top of //schbr (Schematic Brush Plugin)
+    usage: /treebrush {type} [size] [thickness]
+    aliases:
+      - tbr
+      - treebr
+      - /tbr
   bwall:
     description: Creates walls around a selection
-    usage: /bwall <pattern>
+    usage: /bwall {pattern}
     aliases:
       - /bwall
     permission: bteenhanced.region.wall
