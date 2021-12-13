@@ -332,14 +332,6 @@ public class Wood {
         return false;
     }
 
-    private static double distance(double x1, double y1, double x2, double y2) {
-        return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
-    }
-
-    public float radius(Clipboard clipboard) {
-        return Math.max(clipboard.getRegion().getWidth() / 2f, clipboard.getRegion().getLength() / 2f) + 1;
-    }
-
     private Clipboard randomSchematic() {
         return schematics.get(random.nextInt(schematics.size()));
     }
@@ -372,18 +364,7 @@ public class Wood {
         }
     }
 
-    public static boolean fileIsSchematic(File file) {
-        int period = file.getName().lastIndexOf('.');
-        return file.getName().substring(period + 1).equals("schematic");
-    }
-
-    public boolean inBaseDirectory(File base, File user) {
-        URI parentURI = base.toURI();
-        URI childURI = user.toURI();
-        return !parentURI.relativize(childURI).isAbsolute();
-    }
-
-    public void setTargetBlocks(String target) {
+    private void setTargetBlocks(String target) {
         if (target.startsWith("!") && target.length() > 1) {
             this.targetBlocks = target.substring(1).split(",");
             this.inverseMask = true;
@@ -392,12 +373,31 @@ public class Wood {
         }
     }
 
-    public boolean matchesTarget(BaseBlock block) {
+    private boolean matchesTarget(BaseBlock block) {
         for (String targetBlock : targetBlocks) {
             if ((block.getId() + ":" + block.getData()).equals(targetBlock) || (!targetBlock.contains(":") && Integer.toString(block.getId()).equals(targetBlock))) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean fileIsSchematic(File file) {
+        int period = file.getName().lastIndexOf('.');
+        return file.getName().substring(period + 1).equals("schematic");
+    }
+
+    private static boolean inBaseDirectory(File base, File user) {
+        URI parentURI = base.toURI();
+        URI childURI = user.toURI();
+        return !parentURI.relativize(childURI).isAbsolute();
+    }
+
+    private static double distance(double x1, double y1, double x2, double y2) {
+        return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+    }
+
+    private static float radius(Clipboard clipboard) {
+        return Math.max(clipboard.getRegion().getWidth() / 2f, clipboard.getRegion().getLength() / 2f) + 1;
     }
 }
