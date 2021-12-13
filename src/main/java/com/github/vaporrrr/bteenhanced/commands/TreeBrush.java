@@ -23,19 +23,26 @@ public class TreeBrush implements CommandExecutor {
             commandSender.sendMessage(ChatColor.RED + "You must be a player to use this command.");
             return true;
         }
+        Command brushCommand = Bukkit.getServer().getPluginCommand("/schbr");
+        if (brushCommand == null) {
+            commandSender.sendMessage(ChatColor.RED + "SchematicBrush is not installed on the server, command //schbr does not exist.");
+            return true;
+        }
+
         if (args.length == 0) {
             commandSender.sendMessage(ChatColor.RED + "Specify a tree type: " + String.join(", ", treeTypes()));
             return true;
         }
-        Bukkit.dispatchCommand(commandSender, "//schbr trees/" + String.join("/", args) + "/*@** -place:bottom -yoff:2");
+        Bukkit.dispatchCommand(commandSender, "/schbr trees/" + String.join("/", args) + "/*@** -place:bottom -yoff:2");
         return true;
     }
 
-    public ArrayList<String> treeTypes() {
-        File treesFolder = new File(we.getDataFolder() + File.separator + "schematics" + File.separator + "trees");
+    //TODO: Add ability to see options/folders in every folder, not just "trees/"
+    public static ArrayList<String> treeTypes() {
+        File folder = new File(we.getDataFolder() + File.separator + "schematics" + File.separator + "trees");
         ArrayList<String> treeTypes = new ArrayList<>();
-        File[] files = treesFolder.listFiles();
-        if (!treesFolder.exists() || files == null) {
+        File[] files = folder.listFiles();
+        if (!folder.exists() || files == null) {
             treeTypes.add("Trees folder not found in WorldEdit schematics folder.");
         } else {
             for (File file : files) {
