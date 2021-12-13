@@ -24,12 +24,6 @@ commands:
       - tbr
       - treebr
       - /tbr
-  bwall:
-    description: Creates walls around a selection
-    usage: /bwall {pattern}
-    aliases:
-      - /bwall
-    permission: bteenhanced.region.wall
   /dell:
     description: Deletes last [num] point(s) in (currently poly2d only) selection
     usage: //dell [num]
@@ -69,11 +63,8 @@ permissions:
     description: All region commands
     children:
       bteenhanced.region.wood: true
-      bteenhanced.region.wall: true
   bteenhanced.region.wood:
     description: Allows usage of /wood
-  bteenhanced.region.wall:
-    description: Allows usage of /bwall
   bteenhanced.selection.*:
     description: Allows usage of all selection related commands
     children:
