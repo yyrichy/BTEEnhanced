@@ -11,13 +11,15 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
-public class UpdateChecker implements Runnable{
+public class UpdateChecker implements Runnable {
     private final BTEEnhanced bteEnhanced;
     private final Logger logger;
+
     public UpdateChecker(BTEEnhanced bteEnhanced) {
         this.bteEnhanced = bteEnhanced;
         this.logger = bteEnhanced.getLogger();
     }
+
     @Override
     public void run() {
         logger.info(ChatColor.GRAY + "-----CHECKING FOR UPDATES-----");
@@ -34,31 +36,30 @@ public class UpdateChecker implements Runnable{
     }
 
     private String getLatestVersion() {
-        String latestVersion;
-        int code = 0;
+        String latestVersion = "NOT FOUND";
         try {
             URL url = new URL("https://api.github.com/repos/vaporrrr/bteenhanced/releases");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.setRequestProperty("Accept", "application/json");
             JsonArray jsonArray;
-            try(BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-                StringBuilder response = new StringBuilder();
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
                 String responseLine;
                 while ((responseLine = br.readLine()) != null) {
                     response.append(responseLine.trim());
                 }
-                jsonArray = new JsonParser().parse(response.toString()).getAsJsonArray();
             }
-            code = con.getResponseCode();
-            latestVersion = cleanVersion(jsonArray.get(0).getAsJsonObject().get("tag_name").getAsString());
-        } catch(Exception e) {
-            logger.severe("Could not get latest version number.");
-            if (code != 0) {
-                logger.severe("Response code: " + code);
+            int code = con.getResponseCode();
+            if (isSuccessStatusCode(code)) {
+                jsonArray = JsonParser.parseString(response.toString()).getAsJsonArray();
+                latestVersion = cleanVersion(jsonArray.get(0).getAsJsonObject().get("tag_name").getAsString());
+            } else {
+                logger.severe("Request for latest release not successful. Response code: " + code);
             }
+        } catch (Exception e) {
+            logger.severe("Unexpected error occurred while getting latest release version number.");
             e.printStackTrace();
-            latestVersion = "NOT FOUND";
         }
         return latestVersion;
     }
@@ -67,7 +68,11 @@ public class UpdateChecker implements Runnable{
         return cleanVersion(bteEnhanced.getDescription().getVersion());
     }
 
-    private String cleanVersion(String version) {
+    private static String cleanVersion(String version) {
         return version.replaceAll("[^0-9.]", "");
+    }
+
+    private static boolean isSuccessStatusCode(int code) {
+        return code >= 200 && code <= 299;
     }
 }

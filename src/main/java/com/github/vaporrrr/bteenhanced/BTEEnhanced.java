@@ -20,7 +20,7 @@ public class BTEEnhanced extends JavaPlugin {
         getCommand("treebrush").setExecutor(new TreeBrush());
         getConfig().options().copyDefaults(true);
         saveConfig();
-        Metrics metrics = new Metrics(this, 13388);
+        new Metrics(this, 13388);
         if (getConfig().getBoolean("UpdateCheckEnabled")) {
             Thread updateChecker = new Thread(new UpdateChecker(this));
             updateChecker.start();
