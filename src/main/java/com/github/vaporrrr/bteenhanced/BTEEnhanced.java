@@ -19,5 +19,7 @@ public class BTEEnhanced extends JavaPlugin {
         getCommand("delpoint").setExecutor(new DelPoint());
         getCommand("treebrush").setExecutor(new TreeBrush());
         Metrics metrics = new Metrics(this, 13388);
+        Thread updateChecker = new Thread(new UpdateChecker(this));
+        updateChecker.start();
     }
 }
