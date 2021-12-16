@@ -18,6 +18,8 @@ public class BTEEnhanced extends JavaPlugin {
         getCommand("dellast").setExecutor(new DelLast());
         getCommand("delpoint").setExecutor(new DelPoint());
         getCommand("treebrush").setExecutor(new TreeBrush());
+        getConfig().options().copyDefaults(true);
+        saveConfig();
         Metrics metrics = new Metrics(this, 13388);
         if (getConfig().getBoolean("UpdateCheckEnabled")) {
             Thread updateChecker = new Thread(new UpdateChecker(this));
