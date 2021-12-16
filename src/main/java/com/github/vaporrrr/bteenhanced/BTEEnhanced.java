@@ -19,7 +19,11 @@ public class BTEEnhanced extends JavaPlugin {
         getCommand("delpoint").setExecutor(new DelPoint());
         getCommand("treebrush").setExecutor(new TreeBrush());
         Metrics metrics = new Metrics(this, 13388);
-        Thread updateChecker = new Thread(new UpdateChecker(this));
-        updateChecker.start();
+        if (getConfig().getBoolean("UpdateCheckEnabled")) {
+            Thread updateChecker = new Thread(new UpdateChecker(this));
+            updateChecker.start();
+        } else {
+            getLogger().info("Update checking is disabled. Check for releases at https://github.com/vaporrrr/BTEEnhanced/releases.");
+        }
     }
 }

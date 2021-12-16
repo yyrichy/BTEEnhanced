@@ -22,8 +22,8 @@ public class UpdateChecker implements Runnable{
     public void run() {
         logger.info(ChatColor.GRAY + "-----CHECKING FOR UPDATES-----");
         String current = getCurrentVersion();
-        logger.info(ChatColor.AQUA + "Current version: " + current);
         String latest = getLatestVersion();
+        logger.info(ChatColor.AQUA + "Current version: " + current);
         logger.info(ChatColor.AQUA + "Latest version: " + latest);
         if (!current.equals(latest)) {
             logger.info(ChatColor.DARK_RED + "Plugin is not latest! Is it outdated? https://github.com/vaporrrr/BTEEnhanced/releases");
@@ -34,7 +34,7 @@ public class UpdateChecker implements Runnable{
     }
 
     private String getLatestVersion() {
-        String latestVersion = "NOT FOUND";
+        String latestVersion;
         int code = 0;
         try {
             URL url = new URL("https://api.github.com/repos/vaporrrr/bteenhanced/releases");
@@ -51,15 +51,16 @@ public class UpdateChecker implements Runnable{
                 jsonArray = new JsonParser().parse(response.toString()).getAsJsonArray();
             }
             code = con.getResponseCode();
-            latestVersion = jsonArray.get(0).getAsJsonObject().get("tag_name").getAsString();
+            latestVersion = cleanVersion(jsonArray.get(0).getAsJsonObject().get("tag_name").getAsString());
         } catch(Exception e) {
             logger.severe("Could not get latest version number.");
             if (code != 0) {
                 logger.severe("Response code: " + code);
             }
             e.printStackTrace();
+            latestVersion = "NOT FOUND";
         }
-        return cleanVersion(latestVersion);
+        return latestVersion;
     }
 
     private String getCurrentVersion() {
