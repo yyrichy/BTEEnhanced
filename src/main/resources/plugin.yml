@@ -5,6 +5,8 @@ name: ${project.name}
 version: ${project.version}
 depend:
   - WorldEdit
+softdepend:
+  - SchematicBrush
 commands:
   wood:
     description: Creates a forest/wood in your selection from schematics

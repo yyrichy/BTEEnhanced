@@ -23,12 +23,10 @@ public class TreeBrush implements CommandExecutor {
             commandSender.sendMessage(ChatColor.RED + "You must be a player to use this command.");
             return true;
         }
-        Command brushCommand = Bukkit.getServer().getPluginCommand("/schbr");
-        if (brushCommand == null) {
-            commandSender.sendMessage(ChatColor.RED + "SchematicBrush is not installed on the server, command //schbr does not exist.");
+        if (Bukkit.getPluginManager().getPlugin("SchematicBrush") == null) {
+            commandSender.sendMessage(ChatColor.RED + "Plugin SchematicBrush is not installed.");
             return true;
         }
-
         if (args.length == 0) {
             commandSender.sendMessage(ChatColor.RED + "Specify a tree type: " + String.join(", ", treeTypes()));
             return true;
