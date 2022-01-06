@@ -16,11 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.github.vaporrrr.bteenhanced;
+package com.github.vaporrrr.bteenhanced.update;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
+import com.github.vaporrrr.bteenhanced.BTEEnhanced;
 import org.bukkit.ChatColor;
+import org.json.JSONArray;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -41,7 +41,7 @@ public class UpdateChecker implements Runnable {
     @Override
     public void run() {
         logger.info(ChatColor.GRAY + "-----CHECKING FOR UPDATES-----");
-        String current = getCurrentVersion();
+        String current = cleanVersion(bteEnhanced.getDescription().getVersion());
         String latest = getLatestVersion();
         logger.info(ChatColor.AQUA + "Current version: " + current);
         logger.info(ChatColor.AQUA + "Latest version: " + latest);
@@ -60,7 +60,6 @@ public class UpdateChecker implements Runnable {
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.setRequestProperty("Accept", "application/json");
-            JsonArray jsonArray;
             StringBuilder response = new StringBuilder();
             try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
                 String responseLine;
@@ -69,9 +68,9 @@ public class UpdateChecker implements Runnable {
                 }
             }
             int code = con.getResponseCode();
-            if (isSuccessStatusCode(code)) {
-                jsonArray = JsonParser.parseString(response.toString()).getAsJsonArray();
-                latestVersion = cleanVersion(jsonArray.get(0).getAsJsonObject().get("tag_name").getAsString());
+            if (code >= 200 && code <= 299) {
+                JSONArray jsonObject = new JSONArray(response.toString());
+                latestVersion = cleanVersion(jsonObject.getJSONObject(0).getString("tag_name"));
             } else {
                 logger.severe("Request for latest release not successful. Response code: " + code);
             }
@@ -82,15 +81,7 @@ public class UpdateChecker implements Runnable {
         return latestVersion;
     }
 
-    private String getCurrentVersion() {
-        return cleanVersion(bteEnhanced.getDescription().getVersion());
-    }
-
     private static String cleanVersion(String version) {
         return version.replaceAll("[^0-9.]", "");
-    }
-
-    private static boolean isSuccessStatusCode(int code) {
-        return code >= 200 && code <= 299;
     }
 }

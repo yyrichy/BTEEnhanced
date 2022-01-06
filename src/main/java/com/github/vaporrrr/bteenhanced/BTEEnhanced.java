@@ -21,6 +21,7 @@ package com.github.vaporrrr.bteenhanced;
 
 import com.github.vaporrrr.bteenhanced.bstats.Metrics;
 import com.github.vaporrrr.bteenhanced.commands.*;
+import com.github.vaporrrr.bteenhanced.update.UpdateChecker;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class BTEEnhanced extends JavaPlugin {
