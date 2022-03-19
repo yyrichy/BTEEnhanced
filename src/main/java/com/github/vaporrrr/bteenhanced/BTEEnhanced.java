@@ -21,7 +21,6 @@ package com.github.vaporrrr.bteenhanced;
 
 import com.github.vaporrrr.bteenhanced.bstats.Metrics;
 import com.github.vaporrrr.bteenhanced.commands.*;
-import com.github.vaporrrr.bteenhanced.update.UpdateChecker;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class BTEEnhanced extends JavaPlugin {
@@ -41,11 +40,5 @@ public class BTEEnhanced extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
         new Metrics(this, 13388);
-        if (getConfig().getBoolean("UpdateCheckEnabled")) {
-            Thread updateChecker = new Thread(new UpdateChecker(this));
-            updateChecker.start();
-        } else {
-            getLogger().info("Update checking is disabled. Check for releases at https://github.com/vaporrrr/BTEEnhanced/releases.");
-        }
     }
 }
